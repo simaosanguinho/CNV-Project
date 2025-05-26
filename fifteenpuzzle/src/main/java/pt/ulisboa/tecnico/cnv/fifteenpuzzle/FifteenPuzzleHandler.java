@@ -5,6 +5,8 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
+import pt.ulisboa.tecnico.cnv.javassist.tools.ICount;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
@@ -68,8 +70,8 @@ public class FifteenPuzzleHandler implements HttpHandler, RequestHandler<Map<Str
         OutputStream os = he.getResponseBody();
         os.write(response.getBytes());
         os.close();
+        ICount.printStatistics();
     }
-
 
     /**
      * Entrypoint for AWS Lambda.
@@ -84,7 +86,8 @@ public class FifteenPuzzleHandler implements HttpHandler, RequestHandler<Map<Str
 
     public static void main(String[] args) {
         if (args.length < 2) {
-            System.out.println("Usage: java pt.ulisboa.tecnico.cnv.fifteenpuzzle.FifteenPuzzleHandler <size> <number_of_shuffles>");
+            System.out.println(
+                    "Usage: java pt.ulisboa.tecnico.cnv.fifteenpuzzle.FifteenPuzzleHandler <size> <number_of_shuffles>");
             return;
         }
 

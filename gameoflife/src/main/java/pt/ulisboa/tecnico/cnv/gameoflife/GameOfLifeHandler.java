@@ -15,6 +15,8 @@ import java.util.Map;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 
+import pt.ulisboa.tecnico.cnv.javassist.tools.ICount;
+
 public class GameOfLifeHandler implements HttpHandler, RequestHandler<Map<String, String>, String> {
 
     private final static ObjectMapper MAPPER = new ObjectMapper();
@@ -29,7 +31,8 @@ public class GameOfLifeHandler implements HttpHandler, RequestHandler<Map<String
             this.map = map;
         }
 
-        public GameOfLifeInput() {}
+        public GameOfLifeInput() {
+        }
     }
 
     /**
@@ -44,7 +47,8 @@ public class GameOfLifeHandler implements HttpHandler, RequestHandler<Map<String
             this.outputMap = outputMap;
         }
 
-        public GameOfLifeResponse() {}
+        public GameOfLifeResponse() {
+        }
     }
 
     /**
@@ -118,13 +122,14 @@ public class GameOfLifeHandler implements HttpHandler, RequestHandler<Map<String
         OutputStream os = he.getResponseBody();
         os.write(response.getBytes());
         os.close();
+        ICount.printStatistics();
     }
 
     /**
      * Entrypoint for AWS Lambda.
      */
     @Override
-    public String handleRequest(Map<String,String> event, Context context) {
+    public String handleRequest(Map<String, String> event, Context context) {
         int iterations = Integer.parseInt(event.get("iterations"));
         String mapFilename = event.get("mapFilename");
 
@@ -145,19 +150,21 @@ public class GameOfLifeHandler implements HttpHandler, RequestHandler<Map<String
      */
     public static void main(String[] args) {
         if (args.length < 2) {
-            System.out.println("Usage: java pt.ulisboa.tecnico.cnv.gameoflife.GameOfLifeHandler <map_json_filename> <iterations>");
+            System.out.println(
+                    "Usage: java pt.ulisboa.tecnico.cnv.gameoflife.GameOfLifeHandler <map_json_filename> <iterations>");
             return;
         }
         String mapFilename = args[0];
 
         int[][] intMap;
-        try (InputStream mapFileInputStream = GameOfLifeHandler.class.getClassLoader().getResourceAsStream(mapFilename)) {
+        try (InputStream mapFileInputStream = GameOfLifeHandler.class.getClassLoader()
+                .getResourceAsStream(mapFilename)) {
             GameOfLifeInput request = MAPPER.readValue(mapFileInputStream, GameOfLifeInput.class);
             intMap = request.map;
         } catch (IOException | NullPointerException e) {
             e.printStackTrace();
             System.exit(1);
-            return;  // redundant but needed to avoid null-check warning.
+            return; // redundant but needed to avoid null-check warning.
         }
 
         int iterations = 0;
