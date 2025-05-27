@@ -1,2 +1,11 @@
 *.class
+./scripts/config.sh
+*.zip
+scripts/config.sh
+config.sh
 
+
+# Aux files
+image.id
+instance.id
+instance.dns

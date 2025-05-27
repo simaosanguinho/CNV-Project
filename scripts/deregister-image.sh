@@ -1,3 +1,5 @@
 #!/bin/bash
 
-aws ec2 deregister-image --image-id $(cat image.id)
+source config.sh
+
+aws ec2 deregister-image --image-id $(cat image.id) --region us-east-1
