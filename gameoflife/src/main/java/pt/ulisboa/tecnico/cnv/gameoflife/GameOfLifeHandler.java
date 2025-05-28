@@ -5,10 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpExchange;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,6 +20,11 @@ import pt.ulisboa.tecnico.cnv.javassist.tools.ICount;
 public class GameOfLifeHandler implements HttpHandler, RequestHandler<Map<String, String>, String> {
 
     private final static ObjectMapper MAPPER = new ObjectMapper();
+    private static Path metricsDir;
+
+    public GameOfLifeHandler(Path golDir) {
+        metricsDir = golDir;
+    }
 
     /**
      * Input map model.
@@ -122,7 +127,16 @@ public class GameOfLifeHandler implements HttpHandler, RequestHandler<Map<String
         OutputStream os = he.getResponseBody();
         os.write(response.getBytes());
         os.close();
-        ICount.printStatistics();
+
+        // save statistics to a file
+        String stats = ICount.checkStatistics();
+        String fileName = String.format("Thread %s after Game of Life (%s, %s)",
+                Thread.currentThread().getId(),
+                iterations, mapFilename);
+        Path outputFile = metricsDir.resolve(fileName);
+        try (BufferedWriter writer = Files.newBufferedWriter(outputFile)) {
+            writer.write(stats);
+        }
     }
 
     /**

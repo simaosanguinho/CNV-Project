@@ -7,15 +7,22 @@ import com.sun.net.httpserver.HttpHandler;
 
 import pt.ulisboa.tecnico.cnv.javassist.tools.ICount;
 
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
 public class FifteenPuzzleHandler implements HttpHandler, RequestHandler<Map<String, String>, String> {
+
+    private Path metricsDir;
+
+    public FifteenPuzzleHandler(Path metricsDir) {
+        this.metricsDir = metricsDir;
+    }
 
     /**
      * Solver entrypoint.
@@ -70,7 +77,16 @@ public class FifteenPuzzleHandler implements HttpHandler, RequestHandler<Map<Str
         OutputStream os = he.getResponseBody();
         os.write(response.getBytes());
         os.close();
-        ICount.printStatistics();
+
+        // save statistics to a file
+        String stats = ICount.checkStatistics();
+        String fileName = String.format("Thread %s after Fifteen Puzzle (%s, %s",
+                Thread.currentThread().getId(),
+                size, shuffles);
+        Path outputFile = metricsDir.resolve(fileName);
+        try (BufferedWriter writer = Files.newBufferedWriter(outputFile)) {
+            writer.write(stats);
+        }
     }
 
     /**
