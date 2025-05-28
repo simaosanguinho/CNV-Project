@@ -1,6 +1,6 @@
 ## Games@Cloud
 
-This project contains three sub-projects:
+This project contains four sub-projects:
 
 1. `capturetheflag` - the Capture the Flag workload
 2. `fifteenpuzzle` - the 15-Puzzle Solver workload
