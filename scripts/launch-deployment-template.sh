@@ -33,5 +33,5 @@ aws autoscaling create-auto-scaling-group \
   	--health-check-type ELB \
   	--health-check-grace-period 60 \
   	--min-size 1 \
-  	--max-size 1 \
+  	--max-size 10 \
   	--desired-capacity 1

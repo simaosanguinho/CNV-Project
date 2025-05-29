@@ -1,14 +1,6 @@
 package pt.ulisboa.tecnico.cnv.capturetheflag;
 
-import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
-
-import pt.ulisboa.tecnico.cnv.javassist.tools.ICount;
-
 import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
@@ -17,6 +9,13 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.amazonaws.services.lambda.runtime.Context;
+import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+
+import pt.ulisboa.tecnico.cnv.javassist.tools.ICount;
 
 public class CaptureTheFlagHandler implements HttpHandler, RequestHandler<Map<String, String>, String> {
 
@@ -81,10 +80,16 @@ public class CaptureTheFlagHandler implements HttpHandler, RequestHandler<Map<St
         OutputStream os = he.getResponseBody();
         os.write(response.getBytes());
         os.close();
-
+        
         // save statistics to a file
         String stats = ICount.checkStatistics();
-        String fileName = String.format("Thread %s after Capture the flag (%s, %s, %s, %s)",
+        System.out.println("[INFO] Statistics: " + stats);
+        
+        /* BranchStatistics.printStatistics();
+
+        stats += "\n" + BranchStatistics.checkStatistics(); */
+        System.out.println("[INFO] Branch Statistics: " + stats);
+        String fileName = String.format("ICOUNT Thread %s after Capture the flag (%s, %s, %s, %s)",
                 Thread.currentThread().getId(),
                 gridSize, numBlueAgents, numRedAgents, flagPlacementType);
         Path outputFile = metricsDir.resolve(fileName);

@@ -80,8 +80,7 @@ public class FifteenPuzzleHandler implements HttpHandler, RequestHandler<Map<Str
 
         // save statistics to a file
         String stats = ICount.checkStatistics();
-        String fileName = String.format("Thread %s after Fifteen Puzzle (%s, %s",
-                Thread.currentThread().getId(),
+        String fileName = String.format("ICOUNT Fifteen Puzzle (%s, %s",
                 size, shuffles);
         Path outputFile = metricsDir.resolve(fileName);
         try (BufferedWriter writer = Files.newBufferedWriter(outputFile)) {

@@ -130,7 +130,7 @@ public class GameOfLifeHandler implements HttpHandler, RequestHandler<Map<String
 
         // save statistics to a file
         String stats = ICount.checkStatistics();
-        String fileName = String.format("Thread %s after Game of Life (%s, %s)",
+        String fileName = String.format("ICOUNT Thread %s after Game of Life (%s, %s)",
                 Thread.currentThread().getId(),
                 iterations, mapFilename);
         Path outputFile = metricsDir.resolve(fileName);
