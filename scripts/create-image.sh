@@ -24,8 +24,8 @@ aws ec2 wait image-available --filters Name=name,Values=CNV-Image
 echo "Waiting for image to be ready... done! \o/"
 
 # Step 6: terminate the vm instance.
-aws ec2 terminate-instances --instance-ids $(cat instance.id)
+#aws ec2 terminate-instances --instance-ids $(cat instance.id)
 
 # Step 7: delete the AMI instance.
-$DIR/deregister-image.sh
-echo "Image with id $(cat image.id) has been deregistered successfully."
+#$DIR/deregister-image.sh
+#echo "Image with id $(cat image.id) has been deregistered successfully."
