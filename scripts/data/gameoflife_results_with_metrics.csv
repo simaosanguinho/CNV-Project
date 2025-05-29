@@ -1,0 +1,5 @@
+mapFilename,iterations,ninsts,nblocks
+glider-10-10.json,10,552585,35003
+glider-10-10.json,20,1098125,69607
+glider-10-10.json,50,2738825,173691
+glider-10-10.json,100,5473725,347191

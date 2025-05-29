@@ -89,7 +89,7 @@ public class CaptureTheFlagHandler implements HttpHandler, RequestHandler<Map<St
 
         stats += "\n" + BranchStatistics.checkStatistics(); */
         System.out.println("[INFO] Branch Statistics: " + stats);
-        String fileName = String.format("Thread %s after Capture the flag (%s, %s, %s, %s)",
+        String fileName = String.format("ICOUNT Thread %s after Capture the flag (%s, %s, %s, %s)",
                 Thread.currentThread().getId(),
                 gridSize, numBlueAgents, numRedAgents, flagPlacementType);
         Path outputFile = metricsDir.resolve(fileName);
