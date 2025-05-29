@@ -4,8 +4,12 @@ import os
 import re
 
 # === Parameters ===
-map_files = ['glider-10-10.json']  # Update to match your actual files
-iterations_list = [10, 20, 50, 100]
+map_files = ['glider-10-10.json', 'glider-11-11.json', 'glider-12-12.json', 'glider-13-13.json',
+                'glider-14-14.json', 'glider-15-15.json', 'glider-16-16.json', 'glider-17-17.json',
+                'glider-18-18.json', 'glider-19-19.json', 'glider-20-20.json', 'glider-25-25.json',
+                'glider-30-30.json', 'glider-35-35.json', 'glider-40-40.json', 'glider-45-45.json',
+                'glider-50-50.json']
+iterations_list = [10, 20, 30, 40, 50, 100, 200, 300]
 
 METRICS_PATH = '../../metrics/gol-metrics/'
 output_file = 'gameoflife_results_with_metrics.csv'
