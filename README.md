@@ -57,6 +57,15 @@ This setup uses the following key parameters to ensure a scalable, reliable, and
 
 This configuration provides a balance between availability, responsiveness, and cost-efficiency by ensuring that only healthy instances serve traffic and that capacity can scale dynamically based on demand.
 
+### Scaling Up and Down Policies
+- **Scale Up Policy:**  
+  Triggered when the average CPU utilization across instances exceeds 70% for 2 minutes. This policy increases the instance count by 1 to handle increased load.
+- **Scale Down Policy:**
+  Triggered when the average CPU utilization across instances falls below 20% for 2 minutes. This policy decreases the instance count by 1 to reduce costs when demand is low.
+
+These policies parameters were chosen based on past experiments and observations of workloads' behavior under different loads. The thresholds are set to ensure that the system can handle spikes in traffic without becoming overwhelmed, while also scaling down to save costs when the load decreases.
+
+
 ### How to run the project
 
 In order to run the project, you need to have the following prerequisites installed:
