@@ -9,7 +9,6 @@ This project contains 6 modules:
 5. `javassist` - the module that provides the Javassist Agent to instrument the workloads using tools and generate metrics
 6. `scripts` - the scripts to deploy/terminate the project on AWS, to collect metrics from the workloads and to generate th cost estimation functions.
 
-Refer to the `README.md` files of the sub-projects to get more details about each specific sub-project.
 
 ### Architecture
 
@@ -18,8 +17,8 @@ The architecture of the project is based on the following 3 main components:
 - **Resource Manager**: This component is responsible for managing the resources of the system. It is composed of the Load Balancer(LB) and AutoScaler(AS) and it will be operating in a dedicated instance.
 - **Workers**: This components will be running the workloads. They will be operating in a dedicated instance. Each instance will be running the WebServer, allowing to process requests from all 3 games. Workers can be divided into two distinct groups:
   - **VM Workers**: These workers will be running the workloads in a virtual machine.
-  - **Lambda Workers**: These workers will be running the workloads in a serverless environment.
-- **Metric Storage System**: This component is responsible for storing the metrics of the system. Every time a request is processed, its complexity/cost, alongside with its inputs, will be stored in the MSS. This data can later be retrieved b the LB to aid in the decision making of the request routing. The MSS will be implemented using DynamoDB, which will consist of 3 tables:
+  - **Lambda Workers**: These workers will be running the workloads in a serverless environment (to be done).
+- **Metric Storage System**(to be done): This component is responsible for storing the metrics of the system. Every time a request is processed, its complexity/cost, alongside with its inputs, will be stored in the MSS. This data can later be retrieved b the LB to aid in the decision making of the request routing. The MSS will be implemented using DynamoDB, which will consist of 3 tables:
   - **Capture the Flag Table**: This table will store the metrics of the Capture the Flag workload.
   - **15-Puzzle Table**: This table will store the metrics of the 15-Puzzle workload.
   - **Game of Life Table**: This table will store the metrics of the Game of Life workload.
@@ -68,6 +67,8 @@ In order to run the project, you need to have the following prerequisites instal
 - **AWS CLI** - to deploy the project on AWS
 - **JQ** - to parse JSON responses from AWS CLI
 
+An AWS Key Pair must also be created in the AWS region you want to deploy the project. This key pair will be used by the scripts to manipulate and set EC2 instances running the workloads. A security group must also be created in the AWS region you want to deploy the project. This security group will be used to allow traffic to the EC2 instances running the workloads. It accepts traffic on port 80 (HTTP), 443 (HTTPS) and port 8000 (Web Server) from anywhere, allowing public access to the web server. It also allows SSH traffic on port 22 from your IP address, enabling secure access to the instances for management and debugging.
+
 All the script to deploy the project on AWS are located in the `scripts` folder.
 
 1. Firstly, AWS credentials must be configured in order to run the scripts. This can be done by filling the config file located in `scripts/config.sh`. The config file will set all the environment variables needed to run the scripts:
@@ -102,7 +103,12 @@ All the script to deploy the project on AWS are located in the `scripts` folder.
 - **`WEBSERVER_PATH`**  
   Relative path to the webserver project directory, which might be used for deployment or configuration purposes.
 
-(TO BE CONTINUED...)
+2. In order to start the project on AWS:
+    - Run the script `scripts/start.sh`. This script will create the necessary resources on AWS, including the an instance with all the necessary software installed, the Load Balancer and the Auto Scaling Group. It will also deploy the workloads on the instance and start the web server.
+
+3. To terminate the project on AWS:
+    - Run the script `scripts/stop.sh`. This script will terminate the Auto Scaling Group, the Load Balancer and the instance running the workloads. It will also delete all the resources created by the project on AWS, like the Snapshot, the AMI.
+
 
 ### Data Collection and Cost Estimation
 
