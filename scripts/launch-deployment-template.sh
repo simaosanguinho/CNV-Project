@@ -4,9 +4,10 @@ source config.sh
 
 # Create load balancer and configure health check.
 aws elb create-load-balancer \
-	--load-balancer-name CNV-LoadBalancer \
-	--listeners "Protocol=HTTP,LoadBalancerPort=80,InstanceProtocol=HTTP,InstancePort=8000" \
-  	--availability-zones $AWS_DEFAULT_AVAILABILITY_ZONE
+    --load-balancer-name CNV-LoadBalancer \
+    --listeners "Protocol=HTTP,LoadBalancerPort=80,InstanceProtocol=HTTP,InstancePort=8000" \
+    --availability-zones $AWS_DEFAULT_AVAILABILITY_ZONE \
+    --security-groups $AWS_SECURITY_GROUP
 
 aws elb configure-health-check \
   	--load-balancer-name CNV-LoadBalancer \
@@ -72,7 +73,7 @@ aws cloudwatch put-metric-alarm \
 	--namespace AWS/EC2 \
 	--statistic Average \
 	--period 60 \
-	--threshold 30 \
+	--threshold 70 \
 	--comparison-operator GreaterThanThreshold \
 	--evaluation-periods 2 \
 	--alarm-actions $SCALE_UP_POLICY_ARN \
@@ -88,18 +89,18 @@ aws cloudwatch put-metric-alarm \
 	--namespace AWS/EC2 \
 	--statistic Average \
 	--period 60 \
-	--threshold 10 \
+	--threshold 20 \
 	--comparison-operator LessThanThreshold \
 	--evaluation-periods 2 \
 	--alarm-actions $SCALE_DOWN_POLICY_ARN \
 	--dimensions Name=AutoScalingGroupName,Value=CNV-AutoScalingGroup
 
-echo "Low CPU Alarm created (threshold: 10%)"
+echo "Low CPU Alarm created (threshold: 20%)"
 
 echo ""
 echo "=== Auto Scaling Configuration Complete ==="
 echo "✅ CPU-based auto scaling is ready!"
 echo ""
-echo "Scale Up: CPU > 30% for 2 minutes"
-echo "Scale Down: CPU < 10% for 2 minutes"
+echo "Scale Up: CPU > 70% for 2 minutes"
+echo "Scale Down: CPU < 20% for 2 minutes"
 echo "Cooldown: 60 seconds between scaling actions"
