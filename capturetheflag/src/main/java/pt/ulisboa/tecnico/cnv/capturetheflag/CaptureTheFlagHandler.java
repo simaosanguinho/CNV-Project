@@ -34,6 +34,23 @@ public class CaptureTheFlagHandler implements HttpHandler, RequestHandler<Map<St
             Simulation simulation = new Simulation();
             simulation.init(gridSize, flagPlacementType, numBlueAgents, numRedAgents, numFlagsPerTeam, false);
             simulation.run();
+
+            // save statistics to a file
+            String stats = ICount.checkStatistics();
+            System.out.println("[INFO] Statistics: " + stats);
+
+            /* BranchStatistics.printStatistics();
+
+            stats += "\n" + BranchStatistics.checkStatistics(); */
+            System.out.println("[INFO] Branch Statistics: " + stats);
+            String fileName = String.format(
+                "ICOUNT Thread %s after Capture the flag (%s, %s, %s, %s)",
+                Thread.currentThread().getId(), gridSize, numBlueAgents,
+                numRedAgents, flagPlacementType);
+            Path outputFile = metricsDir.resolve(fileName);
+            try (BufferedWriter writer = Files.newBufferedWriter(outputFile)) {
+              writer.write(stats);
+            }
             return simulation.getData();
         } catch (Exception e) {
             return e.getMessage();

@@ -45,6 +45,17 @@ public class FifteenPuzzleHandler implements HttpHandler, RequestHandler<Map<Str
         }
 
         sb.append(FifteenPuzzle.getSolutionData(solution)).append("\n");
+
+        // save statistics to a file
+        String stats = ICount.checkStatistics();
+        String fileName =
+            String.format("ICOUNT Fifteen Puzzle (%s, %s", size, shuffles);
+        Path outputFile = metricsDir.resolve(fileName);
+        try (BufferedWriter writer = Files.newBufferedWriter(outputFile)) {
+          writer.write(stats);
+        } catch (IOException e) {
+          e.printStackTrace();
+        }
         return sb.toString();
     }
 
