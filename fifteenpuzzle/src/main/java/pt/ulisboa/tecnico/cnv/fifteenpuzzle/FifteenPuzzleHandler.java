@@ -20,6 +20,11 @@ public class FifteenPuzzleHandler implements HttpHandler, RequestHandler<Map<Str
 
     private Path metricsDir;
 
+
+    public FifteenPuzzleHandler() {
+        this.metricsDir = null; // No metrics directory by default
+    }
+
     public FifteenPuzzleHandler(Path metricsDir) {
         this.metricsDir = metricsDir;
     }
@@ -45,6 +50,11 @@ public class FifteenPuzzleHandler implements HttpHandler, RequestHandler<Map<Str
         }
 
         sb.append(FifteenPuzzle.getSolutionData(solution)).append("\n");
+
+        // If metricsDir is null, we do not save the statistics to a file.
+        if (this.metricsDir == null) {
+            return sb.toString();
+        }
 
         // save statistics to a file
         String stats = ICount.checkStatistics();

@@ -9,3 +9,6 @@ config.sh
 image.id
 instance.id
 instance.dns
+
+
+out*

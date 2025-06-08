@@ -21,6 +21,10 @@ public class CaptureTheFlagHandler implements HttpHandler, RequestHandler<Map<St
 
     private Path metricsDir;
 
+    public CaptureTheFlagHandler() {
+        this.metricsDir = null;
+    }
+
     public CaptureTheFlagHandler(Path metricsDir) {
         this.metricsDir = metricsDir;
     }
@@ -35,7 +39,10 @@ public class CaptureTheFlagHandler implements HttpHandler, RequestHandler<Map<St
             simulation.init(gridSize, flagPlacementType, numBlueAgents, numRedAgents, numFlagsPerTeam, false);
             simulation.run();
 
-            // save statistics to a file
+            // If metricsDir is null, we do not save the statistics to a file.
+            if(this.metricsDir == null) {
+                return simulation.getData();
+            }
             String stats = ICount.checkStatistics();
             System.out.println("[INFO] Statistics: " + stats);
 

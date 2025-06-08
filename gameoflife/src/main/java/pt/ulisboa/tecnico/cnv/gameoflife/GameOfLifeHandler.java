@@ -20,6 +20,10 @@ public class GameOfLifeHandler
   private final static ObjectMapper MAPPER = new ObjectMapper();
   private static Path metricsDir;
 
+  public GameOfLifeHandler() {
+    metricsDir = null; // No metrics directory by default
+  }
+
   public GameOfLifeHandler(Path golDir) { metricsDir = golDir; }
 
   /**
@@ -67,6 +71,16 @@ public class GameOfLifeHandler
       }
     }
     GameOfLifeResponse response = new GameOfLifeResponse(inputMap, resultMap);
+
+    // no metrics directory, return JSON response
+    if (metricsDir == null) {
+      try {
+        return MAPPER.writeValueAsString(response);
+      } catch (JsonProcessingException e) {
+        e.printStackTrace();
+        return "{ \"error\":\"" + e.getMessage() + "\"}";
+      }
+    }
 
     // save statistics to a file
     String stats = ICount.checkStatistics();
