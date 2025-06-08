@@ -3,7 +3,9 @@
 *.zip
 scripts/config.sh
 config.sh
-
+*/target/*
+*.pem
+metrics/
 
 # Aux files
 image.id
