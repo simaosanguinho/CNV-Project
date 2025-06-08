@@ -2,6 +2,10 @@ package pt.ulisboa.tecnico.cnv.resourcemanager.loadbalancer;
 
 import com.sun.net.httpserver.HttpServer;
 import pt.ulisboa.tecnico.cnv.resourcemanager.common.InstancePool;
+import pt.ulisboa.tecnico.cnv.resourcemanager.loadbalancer.handlers.RootLoadHandler;
+import pt.ulisboa.tecnico.cnv.resourcemanager.loadbalancer.handlers.GameOfLifeLoadHandler;
+import pt.ulisboa.tecnico.cnv.resourcemanager.loadbalancer.handlers.FifteenPuzzleLoadHandler;
+import pt.ulisboa.tecnico.cnv.resourcemanager.loadbalancer.handlers.CaptureTheFlagLoadHandler;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;

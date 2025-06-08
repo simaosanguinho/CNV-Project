@@ -1,19 +1,16 @@
-package pt.ulisboa.tecnico.cnv.resourcemanager.loadbalancer;
+package pt.ulisboa.tecnico.cnv.resourcemanager.loadbalancer.handlers;
 
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 import pt.ulisboa.tecnico.cnv.resourcemanager.common.InstancePool;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.URI;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class CaptureTheFlagLoadHandler extends GenericGameLoadHandler {
 
-    CaptureTheFlagLoadHandler(InstancePool instancePool) {
+    public CaptureTheFlagLoadHandler(InstancePool instancePool) {
         super(instancePool);
     }
 

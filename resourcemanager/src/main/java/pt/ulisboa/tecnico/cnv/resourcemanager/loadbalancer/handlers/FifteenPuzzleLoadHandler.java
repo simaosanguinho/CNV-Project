@@ -1,20 +1,15 @@
-package pt.ulisboa.tecnico.cnv.resourcemanager.loadbalancer;
+package pt.ulisboa.tecnico.cnv.resourcemanager.loadbalancer.handlers;
 
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 import pt.ulisboa.tecnico.cnv.resourcemanager.common.InstancePool;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.URI;
-import java.util.HashMap;
 import java.util.Map;
 
-import java.io.IOException;
+public class FifteenPuzzleLoadHandler extends GenericGameLoadHandler {
 
-public class GameOfLifeLoadHandler extends GenericGameLoadHandler {
-
-    public GameOfLifeLoadHandler(InstancePool instancePool) {
+    public FifteenPuzzleLoadHandler(InstancePool instancePool) {
         super(instancePool);
     }
 
@@ -30,8 +25,8 @@ public class GameOfLifeLoadHandler extends GenericGameLoadHandler {
         }
 
         Map<String, String> parameters = parseRequest(he);
-        int iterations = Integer.parseInt(parameters.get("iterations"));
-        String mapFilename = parameters.get("mapFilename");
+        int size = Integer.parseInt(parameters.get("size"));
+        int shuffles = Integer.parseInt(parameters.get("shuffles"));
 
         // TODO route the request to a worker
         he.sendResponseHeaders(200, 0);

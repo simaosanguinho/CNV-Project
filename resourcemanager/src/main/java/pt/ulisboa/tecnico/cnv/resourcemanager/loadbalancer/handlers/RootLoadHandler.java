@@ -1,4 +1,4 @@
-package pt.ulisboa.tecnico.cnv.resourcemanager.loadbalancer;
+package pt.ulisboa.tecnico.cnv.resourcemanager.loadbalancer.handlers;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
