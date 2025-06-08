@@ -29,11 +29,7 @@ public class GameOfLifeLoadHandler extends GenericGameLoadHandler {
             return;
         }
 
-        // Parse request.
-        URI requestedUri = he.getRequestURI();
-        String query = requestedUri.getRawQuery();
-        Map<String, String> parameters = queryToMap(query);
-
+        Map<String, String> parameters = parseRequest(he);
         int iterations = Integer.parseInt(parameters.get("iterations"));
         String mapFilename = parameters.get("mapFilename");
 

@@ -28,11 +28,7 @@ public class CaptureTheFlagLoadHandler extends GenericGameLoadHandler {
             return;
         }
 
-        // Parse request.
-        URI requestedUri = he.getRequestURI();
-        String query = requestedUri.getRawQuery();
-        Map<String, String> parameters = queryToMap(query);
-
+        Map<String, String> parameters = parseRequest(he);
         int gridSize = Integer.parseInt(parameters.get("gridSize"));
         int numBlueAgents = Integer.parseInt(parameters.get("numBlueAgents"));
         int numRedAgents = Integer.parseInt(parameters.get("numRedAgents"));

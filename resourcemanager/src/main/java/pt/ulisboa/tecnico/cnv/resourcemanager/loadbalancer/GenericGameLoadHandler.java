@@ -1,8 +1,10 @@
 package pt.ulisboa.tecnico.cnv.resourcemanager.loadbalancer;
 
+import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import pt.ulisboa.tecnico.cnv.resourcemanager.common.InstancePool;
 
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -14,10 +16,16 @@ public abstract class GenericGameLoadHandler implements HttpHandler {
         this.instancePool = instancePool;
     }
 
+    protected Map<String, String> parseRequest(HttpExchange he) {
+        URI requestedUri = he.getRequestURI();
+        String query = requestedUri.getRawQuery();
+        return queryToMap(query);
+    }
+
     /**
      * Parse query string into a map.
      */
-    protected Map<String, String> queryToMap(String query) {
+    private Map<String, String> queryToMap(String query) {
         if (query == null) {
             return null;
         }

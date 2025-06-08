@@ -27,11 +27,7 @@ public class FifteenPuzzleLoadHandler extends GenericGameLoadHandler {
             return;
         }
 
-        // Parse request.
-        URI requestedUri = he.getRequestURI();
-        String query = requestedUri.getRawQuery();
-        Map<String, String> parameters = queryToMap(query);
-
+        Map<String, String> parameters = parseRequest(he);
         int size = Integer.parseInt(parameters.get("size"));
         int shuffles = Integer.parseInt(parameters.get("shuffles"));
 
