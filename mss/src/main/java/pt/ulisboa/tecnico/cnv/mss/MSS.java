@@ -1,3 +1,5 @@
+package pt.ulisboa.tecnico.cnv.mss;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.time.Instant;
