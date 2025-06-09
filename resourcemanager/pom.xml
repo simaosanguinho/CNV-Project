@@ -44,6 +44,12 @@
             <artifactId>commons-math3</artifactId>
             <version>3.6.1</version>
         </dependency>
+
+        <dependency>
+    <groupId>pt.ulisboa.tecnico.cnv</groupId>
+    <artifactId>mss</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+</dependency>
     </dependencies>
 
 

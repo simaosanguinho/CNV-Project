@@ -1,6 +1,7 @@
 package pt.ulisboa.tecnico.cnv.resourcemanager.loadbalancer.estimators;
 
 import java.util.Optional;
+import pt.ulisboa.tecnico.cnv.mss.MSS;
 
 public class CaptureTheFlagEstimator {
 
@@ -41,7 +42,7 @@ public class CaptureTheFlagEstimator {
     }
 
     public void getLastRecordsFromDB() {
-        // TODO
+        MSS mss = MSS.getInstance();
     }
 
 }

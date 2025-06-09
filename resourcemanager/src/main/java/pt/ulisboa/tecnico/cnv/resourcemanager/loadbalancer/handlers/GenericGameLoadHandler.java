@@ -2,6 +2,7 @@ package pt.ulisboa.tecnico.cnv.resourcemanager.loadbalancer.handlers;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+
 import pt.ulisboa.tecnico.cnv.resourcemanager.common.InstancePool;
 
 import java.io.IOException;
@@ -15,12 +16,16 @@ import java.util.Optional;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
+import pt.ulisboa.tecnico.cnv.mss.MSS;
+
 public abstract class GenericGameLoadHandler implements HttpHandler {
 
     protected InstancePool instancePool;
+    protected MSS mss;
 
-    public GenericGameLoadHandler(InstancePool instancePool) {
+    public GenericGameLoadHandler(InstancePool instancePool, MSS mss) {
         this.instancePool = instancePool;
+        this.mss = mss;
     }
 
     /***

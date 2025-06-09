@@ -3,6 +3,7 @@ package pt.ulisboa.tecnico.cnv.resourcemanager.loadbalancer.handlers;
 import com.sun.net.httpserver.HttpExchange;
 import pt.ulisboa.tecnico.cnv.resourcemanager.common.InstancePool;
 import pt.ulisboa.tecnico.cnv.resourcemanager.loadbalancer.estimators.GameOfLifeEstimator;
+import pt.ulisboa.tecnico.cnv.mss.MSS;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -12,8 +13,9 @@ public class GameOfLifeLoadHandler extends GenericGameLoadHandler {
 
     private final GameOfLifeEstimator estimator;
 
-    public GameOfLifeLoadHandler(InstancePool instancePool) {
-        super(instancePool);
+
+    public GameOfLifeLoadHandler(InstancePool instancePool, MSS mss) {
+        super(instancePool, mss);
         this.estimator = new GameOfLifeEstimator();
     }
 

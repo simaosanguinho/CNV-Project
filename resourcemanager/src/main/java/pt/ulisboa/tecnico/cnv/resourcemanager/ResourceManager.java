@@ -9,6 +9,7 @@ import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.cloudwatch.CloudWatchClient;
 import software.amazon.awssdk.services.ec2.Ec2Client;
+import pt.ulisboa.tecnico.cnv.mss.MSS;
 
 public class ResourceManager {
     public static void main(String[] args) {
@@ -48,8 +49,8 @@ public class ResourceManager {
         InstancePool instancePool = new InstancePool(
                 ec2Client, cloudWatchClient, amiId, instanceType, keyPairName,
                 securityGroupIds, subnetId, minInstances, maxInstances);
-
-        Thread loadbalancer = new Thread(new LoadBalancer(instancePool));
+        MSS mss = MSS.getInstance();
+        Thread loadbalancer = new Thread(new LoadBalancer(instancePool, mss));
         Thread autoscaler = new Thread(new AutoScaler(instancePool));
         loadbalancer.start();
         autoscaler.start();

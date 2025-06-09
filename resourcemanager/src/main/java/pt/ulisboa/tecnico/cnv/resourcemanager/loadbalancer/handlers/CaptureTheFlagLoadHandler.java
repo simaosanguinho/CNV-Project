@@ -1,6 +1,7 @@
 package pt.ulisboa.tecnico.cnv.resourcemanager.loadbalancer.handlers;
 
 import com.sun.net.httpserver.HttpExchange;
+
 import pt.ulisboa.tecnico.cnv.resourcemanager.common.InstancePool;
 import pt.ulisboa.tecnico.cnv.resourcemanager.loadbalancer.estimators.CaptureTheFlagEstimator;
 
@@ -9,12 +10,15 @@ import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
 
+import pt.ulisboa.tecnico.cnv.mss.MSS;
+
 public class CaptureTheFlagLoadHandler extends GenericGameLoadHandler {
 
     private final CaptureTheFlagEstimator estimator;
 
-    public CaptureTheFlagLoadHandler(InstancePool instancePool) {
-        super(instancePool);
+    public CaptureTheFlagLoadHandler(InstancePool instancePool, MSS mss) {
+        super(instancePool, mss);
+        this.mss = mss;
         this.estimator = new CaptureTheFlagEstimator();
     }
 

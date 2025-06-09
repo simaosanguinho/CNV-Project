@@ -3,6 +3,7 @@ package pt.ulisboa.tecnico.cnv.resourcemanager.loadbalancer.handlers;
 import com.sun.net.httpserver.HttpExchange;
 import pt.ulisboa.tecnico.cnv.resourcemanager.common.InstancePool;
 import pt.ulisboa.tecnico.cnv.resourcemanager.loadbalancer.estimators.FifteenPuzzleEstimator;
+import pt.ulisboa.tecnico.cnv.mss.MSS;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -12,8 +13,9 @@ public class FifteenPuzzleLoadHandler extends GenericGameLoadHandler {
 
     private final FifteenPuzzleEstimator estimator;
 
-    public FifteenPuzzleLoadHandler(InstancePool instancePool) {
-        super(instancePool);
+    public FifteenPuzzleLoadHandler(InstancePool instancePool, MSS mss) {
+        super(instancePool, mss);
+        this.mss = mss;
         this.estimator = new FifteenPuzzleEstimator();
     }
 

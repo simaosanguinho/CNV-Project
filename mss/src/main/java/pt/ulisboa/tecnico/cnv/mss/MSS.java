@@ -7,19 +7,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.amazonaws.AmazonClientException;
-import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.EnvironmentVariableCredentialsProvider;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-import com.amazonaws.services.dynamodbv2.model.DescribeTableRequest;
 import com.amazonaws.services.dynamodbv2.model.GetItemRequest;
 import com.amazonaws.services.dynamodbv2.model.GetItemResult;
 import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
 import com.amazonaws.services.dynamodbv2.model.ScanRequest;
 import com.amazonaws.services.dynamodbv2.model.ScanResult;
-import com.amazonaws.services.dynamodbv2.model.TableDescription;
 
 /**
  * This sample demonstrates how to perform a few simple operations with the
@@ -32,7 +28,24 @@ public class MSS {
 
     private static AmazonDynamoDB dynamoDB;
 
-    public static void main(String[] args) throws Exception {
+    public MSS() {
+        try {
+            dynamoDB = AmazonDynamoDBClientBuilder.standard()
+                .withCredentials(new EnvironmentVariableCredentialsProvider())
+                .withRegion(AWS_REGION)
+                .build();
+        } catch (Exception e) {
+            System.err.println("Failed to initialize DynamoDB client: " + e.getMessage());
+        }
+    }
+
+    public static MSS getInstance() {
+        return new MSS();
+    }
+      
+    
+
+    /* public static void main(String[] args) throws Exception {
         dynamoDB = AmazonDynamoDBClientBuilder.standard()
             .withCredentials(new EnvironmentVariableCredentialsProvider())
             .withRegion(AWS_REGION)
@@ -61,21 +74,7 @@ public class MSS {
             System.out.println("Reading last 2 entries from CaptureTheFlag:");
             getLastXFromCaptureTheFlag(2); */
 
-        } catch (AmazonServiceException ase) {
-            System.out.println("Caught an AmazonServiceException, which means your request made it "
-                    + "to AWS, but was rejected with an error response for some reason.");
-            System.out.println("Error Message:    " + ase.getMessage());
-            System.out.println("HTTP Status Code: " + ase.getStatusCode());
-            System.out.println("AWS Error Code:   " + ase.getErrorCode());
-            System.out.println("Error Type:       " + ase.getErrorType());
-            System.out.println("Request ID:       " + ase.getRequestId());
-        } catch (AmazonClientException ace) {
-            System.out.println("Caught an AmazonClientException, which means the client encountered "
-                    + "a serious internal problem while trying to communicate with AWS, "
-                    + "such as not being able to access the network.");
-            System.out.println("Error Message: " + ace.getMessage());
-        }
-    }
+
 
     /* WRITE */
     private static void insertIntoCaptureTheFlag(int gridSize, int numBlue, int numRed, String flagType, int Cost) {

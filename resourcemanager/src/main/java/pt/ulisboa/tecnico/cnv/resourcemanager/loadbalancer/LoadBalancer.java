@@ -6,6 +6,7 @@ import pt.ulisboa.tecnico.cnv.resourcemanager.loadbalancer.handlers.RootLoadHand
 import pt.ulisboa.tecnico.cnv.resourcemanager.loadbalancer.handlers.GameOfLifeLoadHandler;
 import pt.ulisboa.tecnico.cnv.resourcemanager.loadbalancer.handlers.FifteenPuzzleLoadHandler;
 import pt.ulisboa.tecnico.cnv.resourcemanager.loadbalancer.handlers.CaptureTheFlagLoadHandler;
+import pt.ulisboa.tecnico.cnv.mss.MSS;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -13,8 +14,10 @@ import java.net.InetSocketAddress;
 public class LoadBalancer implements Runnable {
 
     InstancePool instancePool;
+    MSS mss;
 
-    public LoadBalancer(InstancePool instancePool) {
+    public LoadBalancer(InstancePool instancePool, MSS mss) {
+        this.mss = mss;
         this.instancePool = instancePool;
     }
 
@@ -24,9 +27,9 @@ public class LoadBalancer implements Runnable {
             HttpServer server = HttpServer.create(new InetSocketAddress(8001), 0);
             server.setExecutor(java.util.concurrent.Executors.newCachedThreadPool());
             server.createContext("/", new RootLoadHandler());
-            server.createContext("/gameoflife", new GameOfLifeLoadHandler(instancePool));
-            server.createContext("/fifteenpuzzle", new FifteenPuzzleLoadHandler(instancePool));
-            server.createContext("/capturetheflag", new CaptureTheFlagLoadHandler(instancePool));
+            server.createContext("/gameoflife", new GameOfLifeLoadHandler(instancePool, mss));
+            server.createContext("/fifteenpuzzle", new FifteenPuzzleLoadHandler(instancePool, mss));
+            server.createContext("/capturetheflag", new CaptureTheFlagLoadHandler(instancePool, mss));
             server.start();
             System.out.println("LoadBalancer started on port 8001");
         } catch (IOException e) {
