@@ -1,6 +1,6 @@
 package pt.ulisboa.tecnico.cnv.mss;
-
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -47,23 +47,9 @@ public class MSS {
             TableDescription tableDescription = dynamoDB.describeTable(describeTableRequest).getTable();
             System.out.println("Table Description: " + tableDescription);
 
-            /* // Add an item
-            dynamoDB.putItem(new PutItemRequest(tableName, newItem("Bill & Ted's Excellent Adventure", 1989, "****", "James", "Sara")));
-
-            // Add another item
-            dynamoDB.putItem(new PutItemRequest(tableName, newItem("Airplane", 1980, "*****", "James", "Billy Bob")));
-
-            // Scan items for movies with a year attribute greater than 1985
-            HashMap<String, Condition> scanFilter = new HashMap<String, Condition>();
-            Condition condition = new Condition()
-                .withComparisonOperator(ComparisonOperator.GT.toString())
-                .withAttributeValueList(new AttributeValue().withN("1985"));
-            scanFilter.put("year", condition);
-            ScanRequest scanRequest = new ScanRequest(tableName).withScanFilter(scanFilter);
-            ScanResult scanResult = dynamoDB.scan(scanRequest);
-            System.out.println("Result: " + scanResult); */
+            // USAGE Example
             // Insert into CaptureTheFlag
-            insertIntoCaptureTheFlag(10, 5, 5, "A", 20);
+            /* insertIntoCaptureTheFlag(10, 5, 5, "A", 20);
             insertIntoCaptureTheFlag(10, 3, 7, "B", 15);
             insertIntoCaptureTheFlag(20, 10, 10, "C", 30);
             insertIntoCaptureTheFlag(20, 5, 15, "D", 25);
@@ -73,7 +59,7 @@ public class MSS {
             readFromCaptureTheFlag(10, 5, 5, "A");
 
             System.out.println("Reading last 2 entries from CaptureTheFlag:");
-            getLastXFromCaptureTheFlag(2);
+            getLastXFromCaptureTheFlag(2); */
 
         } catch (AmazonServiceException ase) {
             System.out.println("Caught an AmazonServiceException, which means your request made it "
@@ -184,19 +170,61 @@ public class MSS {
     return result.getItem();
 }
 
-private static void getLastXFromCaptureTheFlag(int x) {
+private static List<Map<String, AttributeValue>> getLastXFromCaptureTheFlag(int x) {
     ScanRequest scanRequest = new ScanRequest().withTableName("CaptureTheFlag");
     ScanResult result = dynamoDB.scan(scanRequest);
+    List<Map<String, AttributeValue>> items = result.getItems() != null ? result.getItems() : new ArrayList<>();
 
-    List<Map<String, AttributeValue>> lastX = result.getItems().stream()
-        .sorted(Comparator.comparing((Map<String, AttributeValue> item) -> 
+    List<Map<String, AttributeValue>> lastX = items.stream()
+        .filter(item -> item.containsKey("CreatedAt"))
+        .sorted(Comparator.comparing((Map<String, AttributeValue> item) ->
             Instant.parse(item.get("CreatedAt").getS())).reversed())
         .limit(x)
         .collect(Collectors.toList());
 
     System.out.println("Last " + x + " entries from CaptureTheFlag:");
     lastX.forEach(System.out::println);
+
+    return lastX;
 }
+
+private static List<Map<String, AttributeValue>> getLastXFromFifteenPuzzle(int x) {
+    ScanRequest scanRequest = new ScanRequest().withTableName("FifteenPuzzle");
+    ScanResult result = dynamoDB.scan(scanRequest);
+    List<Map<String, AttributeValue>> items = result.getItems() != null ? result.getItems() : new ArrayList<>();
+
+    List<Map<String, AttributeValue>> lastX = items.stream()
+        .filter(item -> item.containsKey("CreatedAt"))
+        .sorted(Comparator.comparing((Map<String, AttributeValue> item) ->
+            Instant.parse(item.get("CreatedAt").getS())).reversed())
+        .limit(x)
+        .collect(Collectors.toList());
+
+    System.out.println("Last " + x + " entries from FifteenPuzzle:");
+    lastX.forEach(System.out::println);
+
+    return lastX;
+}
+
+private static List<Map<String, AttributeValue>> getLastXFromGameOfLife(int x) {
+    ScanRequest scanRequest = new ScanRequest().withTableName("GameOfLife");
+    ScanResult result = dynamoDB.scan(scanRequest);
+    List<Map<String, AttributeValue>> items = result.getItems() != null ? result.getItems() : new ArrayList<>();
+
+    List<Map<String, AttributeValue>> lastX = items.stream()
+        .filter(item -> item.containsKey("CreatedAt"))
+        .sorted(Comparator.comparing((Map<String, AttributeValue> item) ->
+            Instant.parse(item.get("CreatedAt").getS())).reversed())
+        .limit(x)
+        .collect(Collectors.toList());
+
+    System.out.println("Last " + x + " entries from GameOfLife:");
+    lastX.forEach(System.out::println);
+
+    return lastX;
+}
+
+
 
 
 }
