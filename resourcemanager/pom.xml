@@ -1,7 +1,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-         
+
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>pt.ulisboa.tecnico.cnv</groupId>
@@ -16,29 +16,36 @@
         <maven.compiler.target>11</maven.compiler.target>
     </properties>
 
-        <dependencies>
-            <!-- Core dependency for AWS SDK v2 -->
-            <dependency>
-                <groupId>software.amazon.awssdk</groupId>
-                <artifactId>cloudwatch</artifactId>
-                <version>2.25.26</version> <!-- Use latest version if needed -->
-            </dependency>
-        
-            <!-- Add other SDK v2 services you use, like EC2 -->
-            <dependency>
-                <groupId>software.amazon.awssdk</groupId>
-                <artifactId>ec2</artifactId>
-                <version>2.25.26</version>
-            </dependency>
-        
-            <!-- Add SDK core (needed in most cases) -->
-            <dependency>
-                <groupId>software.amazon.awssdk</groupId>
-                <artifactId>sdk-core</artifactId>
-                <version>2.25.26</version>
-            </dependency>
-        </dependencies>
-        
+    <dependencies>
+        <!-- Core dependency for AWS SDK v2 -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>cloudwatch</artifactId>
+            <version>2.25.26</version> <!-- Use latest version if needed -->
+        </dependency>
+
+        <!-- Add other SDK v2 services you use, like EC2 -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>ec2</artifactId>
+            <version>2.25.26</version>
+        </dependency>
+
+        <!-- Add SDK core (needed in most cases) -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>sdk-core</artifactId>
+            <version>2.25.26</version>
+        </dependency>
+
+        <!-- Apache Commons Math for regression -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-math3</artifactId>
+            <version>3.6.1</version>
+        </dependency>
+    </dependencies>
+
 
     <build>
         <plugins>

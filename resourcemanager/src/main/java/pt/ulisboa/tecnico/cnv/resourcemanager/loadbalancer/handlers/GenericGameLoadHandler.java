@@ -23,6 +23,10 @@ public abstract class GenericGameLoadHandler implements HttpHandler {
         this.instancePool = instancePool;
     }
 
+    /***
+     * Parse the HTTP request from the HttpExchange object.
+     * Extracts the query parameters and returns them as a map.
+     */
     protected Map<String, String> parseRequest(HttpExchange he) {
         URI requestedUri = he.getRequestURI();
         String query = requestedUri.getRawQuery();
@@ -48,6 +52,10 @@ public abstract class GenericGameLoadHandler implements HttpHandler {
         return result;
     }
 
+    /***
+     * Dispatch request to the worker instance.
+     * Returns an Optional containing the HttpResponse if successful, or an empty Optional if an error occurs.
+     */
     protected Optional<HttpResponse<String>> dispatchRequest(Map<String, String> workload, String baseUrl) {
         String query = mapToQuery(workload);
         String fullUrl = baseUrl + "?" + query;
@@ -67,7 +75,7 @@ public abstract class GenericGameLoadHandler implements HttpHandler {
     }
 
     /**
-     * Parse map with workload to query string
+     * Parse map with workload to query string for HTTP request.
      */
     private String mapToQuery(Map<String, String> workload) {
         StringBuilder result = new StringBuilder();
