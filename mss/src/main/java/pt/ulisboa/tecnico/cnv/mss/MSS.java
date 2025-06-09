@@ -1,36 +1,25 @@
 package pt.ulisboa.tecnico.cnv.mss;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.time.Instant;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.EnvironmentVariableCredentialsProvider;
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.profile.ProfileCredentialsProvider;
-import com.amazonaws.regions.Region;
-import com.amazonaws.regions.Regions;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
-import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
-import com.amazonaws.services.dynamodbv2.model.Condition;
-import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
 import com.amazonaws.services.dynamodbv2.model.DescribeTableRequest;
-import com.amazonaws.services.dynamodbv2.model.KeySchemaElement;
-import com.amazonaws.services.dynamodbv2.model.KeyType;
-import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
-import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
-import com.amazonaws.services.dynamodbv2.model.PutItemResult;
 import com.amazonaws.services.dynamodbv2.model.GetItemRequest;
 import com.amazonaws.services.dynamodbv2.model.GetItemResult;
-import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
+import com.amazonaws.services.dynamodbv2.model.PutItemRequest;
 import com.amazonaws.services.dynamodbv2.model.ScanRequest;
 import com.amazonaws.services.dynamodbv2.model.ScanResult;
 import com.amazonaws.services.dynamodbv2.model.TableDescription;
-import com.amazonaws.services.dynamodbv2.util.TableUtils;
 
 /**
  * This sample demonstrates how to perform a few simple operations with the
@@ -75,8 +64,16 @@ public class MSS {
             System.out.println("Result: " + scanResult); */
             // Insert into CaptureTheFlag
             insertIntoCaptureTheFlag(10, 5, 5, "A", 20);
+            insertIntoCaptureTheFlag(10, 3, 7, "B", 15);
+            insertIntoCaptureTheFlag(20, 10, 10, "C", 30);
+            insertIntoCaptureTheFlag(20, 5, 15, "D", 25);
+            insertIntoCaptureTheFlag(10, 2, 8, "E", 18);
+
 
             readFromCaptureTheFlag(10, 5, 5, "A");
+
+            System.out.println("Reading last 2 entries from CaptureTheFlag:");
+            getLastXFromCaptureTheFlag(2);
 
         } catch (AmazonServiceException ase) {
             System.out.println("Caught an AmazonServiceException, which means your request made it "
@@ -134,7 +131,7 @@ public class MSS {
 
 
     /* READ */
-    private static void readFromCaptureTheFlag(int gridSize, int numBlue, int numRed, String flagType) {
+    private static Map<String, AttributeValue> readFromCaptureTheFlag(int gridSize, int numBlue, int numRed, String flagType) {
     String compositeKey = "Blue=" + numBlue + "_Red=" + numRed + "_Flag=" + flagType;
 
     Map<String, AttributeValue> key = new HashMap<>();
@@ -147,10 +144,12 @@ public class MSS {
 
     GetItemResult result = dynamoDB.getItem(request);
     System.out.println("Read CaptureTheFlag Item: " + result.getItem());
+
+    return result.getItem();
 }
 
 
-    private static void readFromFifteenPuzzle(int size, int shuffles) {
+    private static Map<String, AttributeValue> readFromFifteenPuzzle(int size, int shuffles) {
     String compositeKey = "Shuffles=" + shuffles;
 
     Map<String, AttributeValue> key = new HashMap<>();
@@ -163,10 +162,12 @@ public class MSS {
 
     GetItemResult result = dynamoDB.getItem(request);
     System.out.println("Read FifteenPuzzle Item: " + result.getItem());
+
+    return result.getItem();
 }
 
 
-    private static void readFromGameOfLife(String mapFilename, int iterations) {
+    private static Map<String, AttributeValue> readFromGameOfLife(String mapFilename, int iterations) {
     String compositeKey = "Iterations=" + iterations;
 
     Map<String, AttributeValue> key = new HashMap<>();
@@ -179,6 +180,23 @@ public class MSS {
 
     GetItemResult result = dynamoDB.getItem(request);
     System.out.println("Read GameOfLife Item: " + result.getItem());
+
+    return result.getItem();
 }
+
+private static void getLastXFromCaptureTheFlag(int x) {
+    ScanRequest scanRequest = new ScanRequest().withTableName("CaptureTheFlag");
+    ScanResult result = dynamoDB.scan(scanRequest);
+
+    List<Map<String, AttributeValue>> lastX = result.getItems().stream()
+        .sorted(Comparator.comparing((Map<String, AttributeValue> item) -> 
+            Instant.parse(item.get("CreatedAt").getS())).reversed())
+        .limit(x)
+        .collect(Collectors.toList());
+
+    System.out.println("Last " + x + " entries from CaptureTheFlag:");
+    lastX.forEach(System.out::println);
+}
+
 
 }
