@@ -1,6 +1,5 @@
 package pt.ulisboa.tecnico.cnv.resourcemanager.loadbalancer.estimators;
 
-import java.util.List;
 import org.apache.commons.math3.stat.regression.OLSMultipleLinearRegression;
 
 public class PolynomialRegression {

@@ -2,6 +2,7 @@ package pt.ulisboa.tecnico.cnv.resourcemanager.loadbalancer.handlers;
 
 import com.sun.net.httpserver.HttpExchange;
 import pt.ulisboa.tecnico.cnv.resourcemanager.common.InstancePool;
+import pt.ulisboa.tecnico.cnv.resourcemanager.loadbalancer.estimators.CaptureTheFlagEstimator;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -10,8 +11,11 @@ import java.util.Map;
 
 public class CaptureTheFlagLoadHandler extends GenericGameLoadHandler {
 
+    private final CaptureTheFlagEstimator estimator;
+
     public CaptureTheFlagLoadHandler(InstancePool instancePool) {
         super(instancePool);
+        this.estimator = new CaptureTheFlagEstimator();
     }
 
     @Override
@@ -40,7 +44,14 @@ public class CaptureTheFlagLoadHandler extends GenericGameLoadHandler {
             return;
         }
 
-        // TODO route the request to a worker
+        // TODO -- uncomment after
+        // estimate complexity of the request
+        //double estimatedCost = estimator.estimateCost(gridSize, numBlueAgents, numRedAgents, flagPlacementType);
+
+        // route the request to a worker/lambda, receive the response
+        //String response = routeRequestToWorker(parameters, estimatedCost);
+
+        // send response to the client
         he.sendResponseHeaders(200, 0);
         OutputStream os = he.getResponseBody();
         os.write("OK 200".getBytes());

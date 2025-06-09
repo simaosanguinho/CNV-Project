@@ -52,6 +52,19 @@ public abstract class GenericGameLoadHandler implements HttpHandler {
         return result;
     }
 
+    protected String routeRequestToWorker(Map<String, String> workload, double complexity) {
+        // TODO - Choose the worker instance based on the workload complexity
+        String baseUrl = null;
+
+        // Dispatch the request to the worker instance
+        Optional<HttpResponse<String>> response = dispatchRequest(workload, baseUrl);
+        if (response.isPresent()) {
+            return response.get().body();
+        } else {
+            return "Error while dispatching request.";
+        }
+    }
+
     /***
      * Dispatch request to the worker instance.
      * Returns an Optional containing the HttpResponse if successful, or an empty Optional if an error occurs.
