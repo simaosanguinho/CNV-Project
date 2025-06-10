@@ -16,10 +16,12 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
 import pt.ulisboa.tecnico.cnv.javassist.tools.ICount;
+import pt.ulisboa.tecnico.cnv.mss.MSS;
 
 public class CaptureTheFlagHandler implements HttpHandler, RequestHandler<Map<String, String>, String> {
 
     private Path metricsDir;
+    private MSS mss = MSS.getInstance();
 
     public CaptureTheFlagHandler() {
         this.metricsDir = null;
@@ -43,13 +45,13 @@ public class CaptureTheFlagHandler implements HttpHandler, RequestHandler<Map<St
             if(this.metricsDir == null) {
                 return simulation.getData();
             }
-            String stats = ICount.checkStatistics();
+            Long stats = ICount.checkNinsts();
             System.out.println("[INFO] Statistics: " + stats);
 
             /* BranchStatistics.printStatistics();
 
             stats += "\n" + BranchStatistics.checkStatistics(); */
-            System.out.println("[INFO] Branch Statistics: " + stats);
+            /* System.out.println("[INFO] Branch Statistics: " + stats);
             String fileName = String.format(
                 "ICOUNT Thread %s after Capture the flag (%s, %s, %s, %s)",
                 Thread.currentThread().getId(), gridSize, numBlueAgents,
@@ -57,7 +59,10 @@ public class CaptureTheFlagHandler implements HttpHandler, RequestHandler<Map<St
             Path outputFile = metricsDir.resolve(fileName);
             try (BufferedWriter writer = Files.newBufferedWriter(outputFile)) {
               writer.write(stats);
-            }
+            } */
+
+            
+           mss.insertIntoCaptureTheFlag(gridSize, numBlueAgents, numRedAgents, String.valueOf(flagPlacementType), stats);
             return simulation.getData();
         } catch (Exception e) {
             return e.getMessage();

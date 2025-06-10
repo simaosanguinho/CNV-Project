@@ -36,15 +36,15 @@ public class GameOfLifeLoadHandler extends GenericGameLoadHandler {
 
         // TODO -> uncomment after
         // estimate complexity of the request
-        // double estimatedCost = estimator.estimateCost(iterations, mapFilename);
+        double estimatedCost = estimator.estimateCost(iterations, mapFilename);
 
         // route the request to a worker/lambda, receive the response
-        // String response = routeRequestToWorker(parameters, estimatedCost);
+        String response = routeRequestToWorker(parameters, estimatedCost);
 
         // TODO send response to the client
         he.sendResponseHeaders(200, 0);
         OutputStream os = he.getResponseBody();
-        os.write("OK 200".getBytes());
+        os.write(response.getBytes());
         os.close();
     }
 }

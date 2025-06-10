@@ -96,6 +96,11 @@ public class ICount extends CodeDumper {
             + "ninsts: " + ninsts + "\n";
     }
 
+    // return the number of instructions executed in the current thread
+    public static long checkNinsts() {
+        return getNinsts();
+    }
+
     @Override
     protected void transform(CtBehavior behavior) throws Exception {
         super.transform(behavior);

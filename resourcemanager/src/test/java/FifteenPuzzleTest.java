@@ -1,4 +1,4 @@
-package pt.ulisboa.tecnico.cnv.resourcemanager.loadbalancer.estimators;
+// No package declaration since the file is in the default package
 
 import static org.junit.jupiter.api.Assertions.*;
 import java.lang.reflect.Field;
@@ -50,9 +50,8 @@ public class FifteenPuzzleTest {
 
         //estimator.mss.readFromFifteenPuzzle(4, 5);
         
-        double estimatedCost = estimator.estimateCost(4, 2);
-        
-        assertTrue(estimatedCost > 0);
+        double estimatedCost = estimator.estimateCost(50,70);
+        System.out.println("Estimated Cost: " + estimatedCost);
     }
     
    

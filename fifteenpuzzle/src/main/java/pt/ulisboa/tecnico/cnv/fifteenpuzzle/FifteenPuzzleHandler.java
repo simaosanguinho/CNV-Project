@@ -16,9 +16,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import pt.ulisboa.tecnico.cnv.mss.MSS;
+
 public class FifteenPuzzleHandler implements HttpHandler, RequestHandler<Map<String, String>, String> {
 
     private Path metricsDir;
+    private MSS mss = MSS.getInstance();
 
 
     public FifteenPuzzleHandler() {
@@ -57,15 +60,18 @@ public class FifteenPuzzleHandler implements HttpHandler, RequestHandler<Map<Str
         }
 
         // save statistics to a file
-        String stats = ICount.checkStatistics();
-        String fileName =
+        Long stats = ICount.checkNinsts();
+
+        /* String fileName =
             String.format("ICOUNT Fifteen Puzzle (%s, %s", size, shuffles);
         Path outputFile = metricsDir.resolve(fileName);
         try (BufferedWriter writer = Files.newBufferedWriter(outputFile)) {
           writer.write(stats);
         } catch (IOException e) {
           e.printStackTrace();
-        }
+        } */
+        mss.insertIntoFifteenPuzzle(size, shuffles, stats);
+
         return sb.toString();
     }
 

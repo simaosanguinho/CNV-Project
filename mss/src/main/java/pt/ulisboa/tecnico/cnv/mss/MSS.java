@@ -78,7 +78,7 @@ public class MSS {
      */
 
     /* WRITE */
-    public void insertIntoCaptureTheFlag(int gridSize, int numBlue, int numRed, String flagType, int Cost) {
+    public void insertIntoCaptureTheFlag(int gridSize, int numBlue, int numRed, String flagType, long cost) {
         Map<String, AttributeValue> item = new HashMap<>();
         item.put("GridSize", new AttributeValue().withN(String.valueOf(gridSize)));
         item.put("CompositeKey", new AttributeValue("Blue=" + numBlue + "_Red=" + numRed + "_Flag=" + flagType));
@@ -86,13 +86,13 @@ public class MSS {
         item.put("NumRedAgents", new AttributeValue().withN(String.valueOf(numRed)));
         item.put("FlagPlacementType", new AttributeValue(flagType));
         item.put("CreatedAt", new AttributeValue().withS(Instant.now().toString()));
-        item.put("Cost", new AttributeValue().withN(String.valueOf(Cost)));
+        item.put("Cost", new AttributeValue().withN(String.valueOf(cost)));
 
         dynamoDB.putItem(new PutItemRequest("CaptureTheFlag", item));
         System.out.println("Inserted item into CaptureTheFlag");
     }
 
-    public void insertIntoFifteenPuzzle(int size, int shuffles, int cost) {
+    public void insertIntoFifteenPuzzle(int size, int shuffles, long cost) {
         Map<String, AttributeValue> item = new HashMap<>();
         item.put("Size", new AttributeValue().withN(String.valueOf(size)));
         item.put("Shuffles", new AttributeValue().withN(String.valueOf(shuffles)));
@@ -103,11 +103,10 @@ public class MSS {
         System.out.println("Inserted item into FifteenPuzzle");
     }
 
-    public void insertIntoGameOfLife(String mapFilename, int iterations, String checksum, int cost) {
+    public void insertIntoGameOfLife(String mapFilename, int iterations, long cost) {
         Map<String, AttributeValue> item = new HashMap<>();
         item.put("MapFilename", new AttributeValue(mapFilename));
         item.put("Iterations", new AttributeValue().withN(String.valueOf(iterations)));
-        item.put("ResultChecksum", new AttributeValue(checksum));
         item.put("CreatedAt", new AttributeValue().withS(Instant.now().toString()));
         item.put("Cost", new AttributeValue().withN(String.valueOf(cost)));
 

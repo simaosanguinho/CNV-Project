@@ -62,3 +62,11 @@ for name, coef in zip(feature_names[1:], coefs[1:]):  # skip bias
 equation = " + ".join(terms)
 print("\nEstimated Cost Function (ninsts):")
 print(f"ninsts ≈ {equation}")
+
+
+# Run the equatiuon with size = 10 and shuffles = 100
+size_test = 10
+shuffles_test = 10
+X_test = poly.transform([[size_test, shuffles_test]])
+y_pred_test = model.predict(X_test)
+print(f"\nEstimated number of instructions for size={size_test} and shuffles={shuffles_test}: {y_pred_test[0]:.2f}")

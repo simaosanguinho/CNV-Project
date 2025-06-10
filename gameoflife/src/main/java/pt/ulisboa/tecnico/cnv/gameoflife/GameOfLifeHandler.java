@@ -13,18 +13,22 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import pt.ulisboa.tecnico.cnv.javassist.tools.ICount;
+import pt.ulisboa.tecnico.cnv.mss.MSS;
 
 public class GameOfLifeHandler
     implements HttpHandler, RequestHandler<Map<String, String>, String> {
 
   private final static ObjectMapper MAPPER = new ObjectMapper();
   private static Path metricsDir;
+  private MSS mss = MSS.getInstance();
 
   public GameOfLifeHandler() {
     metricsDir = null; // No metrics directory by default
   }
 
-  public GameOfLifeHandler(Path golDir) { metricsDir = golDir; }
+  public GameOfLifeHandler(Path golDir) {
+    metricsDir = golDir;
+  }
 
   /**
    * Input map model.
@@ -32,9 +36,12 @@ public class GameOfLifeHandler
   private static class GameOfLifeInput {
     public int[][] map;
 
-    public GameOfLifeInput(int[][] map) { this.map = map; }
+    public GameOfLifeInput(int[][] map) {
+      this.map = map;
+    }
 
-    public GameOfLifeInput() {}
+    public GameOfLifeInput() {
+    }
   }
 
   /**
@@ -49,13 +56,14 @@ public class GameOfLifeHandler
       this.outputMap = outputMap;
     }
 
-    public GameOfLifeResponse() {}
+    public GameOfLifeResponse() {
+    }
   }
 
   /**
    * Game entrypoint.
    */
-  private String handleWorkload(int[][] inputMap, int iterations) {
+  private String handleWorkload(int[][] inputMap, int iterations, String mapFilename) {
     int height = inputMap.length;
     int width = (height > 0) ? inputMap[0].length : 0;
     byte[] map = convertMapToByteArray(inputMap, height, width);
@@ -83,17 +91,19 @@ public class GameOfLifeHandler
     }
 
     // save statistics to a file
-    String stats = ICount.checkStatistics();
-    String fileName =
-        String.format("ICOUNT Thread %s after Game of Life (%s, %s)",
-                      Thread.currentThread().getId(), iterations, inputMap.length);
-    Path outputFile = metricsDir.resolve(fileName);
-    try (BufferedWriter writer = Files.newBufferedWriter(outputFile)) {
-      writer.write(stats);
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
-
+    Long stats = ICount.checkNinsts();
+    /*
+     * String fileName =
+     * String.format("ICOUNT Thread %s after Game of Life (%s, %s)",
+     * Thread.currentThread().getId(), iterations, inputMap.length);
+     * Path outputFile = metricsDir.resolve(fileName);
+     * try (BufferedWriter writer = Files.newBufferedWriter(outputFile)) {
+     * writer.write(stats);
+     * } catch (IOException e) {
+     * e.printStackTrace();
+     * }
+     */
+    mss.insertIntoGameOfLife(mapFilename, iterations, stats);
     try {
       return MAPPER.writeValueAsString(response);
     } catch (JsonProcessingException e) {
@@ -112,9 +122,9 @@ public class GameOfLifeHandler
 
     if ("OPTIONS".equalsIgnoreCase(he.getRequestMethod())) {
       he.getResponseHeaders().add("Access-Control-Allow-Methods",
-                                  "GET, OPTIONS");
+          "GET, OPTIONS");
       he.getResponseHeaders().add("Access-Control-Allow-Headers",
-                                  "Content-Type,Authorization");
+          "Content-Type,Authorization");
       he.sendResponseHeaders(204, -1);
       return;
     }
@@ -128,10 +138,8 @@ public class GameOfLifeHandler
     String mapFilename = parameters.get("mapFilename");
 
     int[][] map;
-    try (InputStream mapFileInputStream =
-             getClass().getClassLoader().getResourceAsStream(mapFilename)) {
-      GameOfLifeInput request =
-          MAPPER.readValue(mapFileInputStream, GameOfLifeInput.class);
+    try (InputStream mapFileInputStream = getClass().getClassLoader().getResourceAsStream(mapFilename)) {
+      GameOfLifeInput request = MAPPER.readValue(mapFileInputStream, GameOfLifeInput.class);
       map = request.map;
     } catch (NullPointerException | JsonProcessingException e) {
       e.printStackTrace();
@@ -143,7 +151,7 @@ public class GameOfLifeHandler
       return;
     }
 
-    String response = handleWorkload(map, iterations);
+    String response = handleWorkload(map, iterations, mapFilename);
 
     he.sendResponseHeaders(200, response.length());
     OutputStream os = he.getResponseBody();
@@ -152,9 +160,8 @@ public class GameOfLifeHandler
 
     // save statistics to a file
     String stats = ICount.checkStatistics();
-    String fileName =
-        String.format("ICOUNT Thread %s after Game of Life (%s, %s)",
-                      Thread.currentThread().getId(), iterations, mapFilename);
+    String fileName = String.format("ICOUNT Thread %s after Game of Life (%s, %s)",
+        Thread.currentThread().getId(), iterations, mapFilename);
     Path outputFile = metricsDir.resolve(fileName);
     try (BufferedWriter writer = Files.newBufferedWriter(outputFile)) {
       writer.write(stats);
@@ -170,17 +177,15 @@ public class GameOfLifeHandler
     String mapFilename = event.get("mapFilename");
 
     int[][] map;
-    try (InputStream mapFileInputStream =
-             getClass().getClassLoader().getResourceAsStream(mapFilename)) {
-      GameOfLifeInput request =
-          MAPPER.readValue(mapFileInputStream, GameOfLifeInput.class);
+    try (InputStream mapFileInputStream = getClass().getClassLoader().getResourceAsStream(mapFilename)) {
+      GameOfLifeInput request = MAPPER.readValue(mapFileInputStream, GameOfLifeInput.class);
       map = request.map;
     } catch (IOException | NullPointerException e) {
       e.printStackTrace();
       return "{ \"error\":\"" + e.getMessage() + "\"}";
     }
 
-    return handleWorkload(map, iterations);
+    return handleWorkload(map, iterations, mapFilename);
   }
 
   /**
@@ -195,11 +200,9 @@ public class GameOfLifeHandler
     String mapFilename = args[0];
 
     int[][] intMap;
-    try (InputStream mapFileInputStream =
-             GameOfLifeHandler.class.getClassLoader().getResourceAsStream(
-                 mapFilename)) {
-      GameOfLifeInput request =
-          MAPPER.readValue(mapFileInputStream, GameOfLifeInput.class);
+    try (InputStream mapFileInputStream = GameOfLifeHandler.class.getClassLoader().getResourceAsStream(
+        mapFilename)) {
+      GameOfLifeInput request = MAPPER.readValue(mapFileInputStream, GameOfLifeInput.class);
       intMap = request.map;
     } catch (IOException | NullPointerException e) {
       e.printStackTrace();
@@ -241,7 +244,7 @@ public class GameOfLifeHandler
     int index = 0;
     for (int[] row : map) {
       for (int cell : row) {
-        byteArray[index++] = (byte)cell;
+        byteArray[index++] = (byte) cell;
       }
     }
 

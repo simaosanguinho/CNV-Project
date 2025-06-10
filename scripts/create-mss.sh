@@ -85,11 +85,11 @@ echo "Creating GameOfLife table..."
 aws dynamodb create-table \
     --table-name GameOfLife \
     --attribute-definitions \
-        AttributeName=MapFilename,AttributeType=S \
+        AttributeName=MapSize,AttributeType=N \
         AttributeName=Iterations,AttributeType=N \
         AttributeName=CreatedAt,AttributeType=S \
     --key-schema \
-        AttributeName=MapFilename,KeyType=HASH \
+        AttributeName=MapSize,KeyType=HASH \
         AttributeName=Iterations,KeyType=RANGE \
     --billing-mode PAY_PER_REQUEST \
     --table-class STANDARD \
