@@ -30,6 +30,17 @@ public class AutoScaler implements Runnable {
     public void run() {
         logger.info("AutoScaler started");
 
+        // create first instance if none exist
+        if (instancePool.getAllInstances().isEmpty()) {
+            Instance initialInstance = instancePool.createNewInstance();
+            if (initialInstance != null) {
+                logger.info("Created initial instance: " + initialInstance.getInstanceId());
+            } else {
+                logger.warning("Failed to create initial instance");
+            }
+        }
+
+
         while (running) {
             try {
                 performAutoScalingCheck();

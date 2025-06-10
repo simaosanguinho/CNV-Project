@@ -12,3 +12,4 @@ export AWS_EC2_SSH_KEYPAR_PATH=<path to aws ssh keypair>
 export AWS_SECURITY_GROUP=<name of your security group>
 export AWS_KEYPAIR_NAME=<name of your aws keypair>
 export WEBSERVER_PATH=../../CNV-Project
+export IMAGE_PATH=../image.id

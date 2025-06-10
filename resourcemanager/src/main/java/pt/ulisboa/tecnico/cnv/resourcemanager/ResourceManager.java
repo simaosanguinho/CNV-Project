@@ -17,6 +17,7 @@ public class ResourceManager {
         String region = System.getenv("AWS_DEFAULT_REGION");
         String securityGroup = System.getenv("AWS_SECURITY_GROUP");
         String keyPairName = System.getenv("AWS_KEYPAIR_NAME");
+        String amiIdPath = System.getenv("IMAGE_PATH");
 
         // Initialize AWS clients
         Ec2Client ec2Client = Ec2Client.builder()
@@ -31,13 +32,16 @@ public class ResourceManager {
 
         // Configuration parameters - adjust these as needed
         String amiId = null;
-        try {
-            amiId = new String(java.nio.file.Files.readAllBytes(
-                    java.nio.file.Paths.get("image.id"))).trim();
-        } catch (java.io.IOException e) {
-            System.err.println("Failed to read AMI ID from image.id: " + e.getMessage());
-            // System.exit(1);
-            amiId = "ami-12345678"; // Fallback AMI ID, replace with a valid one
+        if (amiIdPath != null) {
+            // read the AMI ID from the specified file
+            try {
+                amiId = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(amiIdPath))).trim();
+                System.out.println("AMI ID: " + amiId);
+            } catch (java.io.IOException e) {
+                System.err.println("Error reading AMI ID from file: " + e.getMessage());
+            }
+        } else {
+            System.err.println("AMI ID not provided. Please set the IMAGE_PATH environment variable.");
         }
         String instanceType = "t3.micro";
         List<String> securityGroupIds = Arrays.asList(securityGroup != null ? securityGroup : "default");
