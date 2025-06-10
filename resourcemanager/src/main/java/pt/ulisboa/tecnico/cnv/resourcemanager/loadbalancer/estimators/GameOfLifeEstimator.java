@@ -1,14 +1,18 @@
 package pt.ulisboa.tecnico.cnv.resourcemanager.loadbalancer.estimators;
 
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class GameOfLifeEstimator {
 
-    private PolynomialRegression estimationFunction;
-    private int requestCount = 0;
     private final int REQUEST_LIMIT = 40; // limit to 40 requests until the model is trained again
+
+    private PolynomialRegression estimationFunction;
+    private final AtomicInteger requestCount = new AtomicInteger(0);
+    private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
     private Integer extractSize(String filename) {
         Pattern FILENAME_PATTERN = Pattern.compile("glider-(\\d+)-\\d+\\.json");
@@ -25,12 +29,17 @@ public class GameOfLifeEstimator {
             return estimatedCost.get();
         }
 
-        if (requestCount >= REQUEST_LIMIT) {
+        if (requestCount.get() >= REQUEST_LIMIT) {
             // TODO ->  need te return type from the mss
             getLastRecordsFromDB();
             double[][] inputs = null;
             double[] outputs = null;
+
+            this.lock.writeLock().lock();
             this.estimationFunction = new PolynomialRegression(inputs, outputs);
+            this.lock.writeLock().unlock();
+
+            this.requestCount.set(0);
         }
 
         Integer mapSize = extractSize(mapFilename);
@@ -38,8 +47,13 @@ public class GameOfLifeEstimator {
                 iterations,
                 mapSize
         };
-        requestCount++;
-        return estimationFunction.estimate(inputFeatures);
+        requestCount.incrementAndGet();
+
+        this.lock.readLock().lock();
+        double estimation = estimationFunction.estimate(inputFeatures);
+        this.lock.readLock().unlock();
+
+        return estimation;
     }
 
     public Optional<Double> checkDatabase(int iterations, String mapFilename) {

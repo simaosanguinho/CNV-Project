@@ -1,12 +1,16 @@
 package pt.ulisboa.tecnico.cnv.resourcemanager.loadbalancer.estimators;
 
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class FifteenPuzzleEstimator {
 
-    private PolynomialRegression estimationFunction;
-    private int requestCount = 0;
     private final int REQUEST_LIMIT = 40; // limit to 40 requests until the model is trained again
+
+    private PolynomialRegression estimationFunction;
+    private final AtomicInteger requestCount = new AtomicInteger(0);
+    private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
     public double estimateCost(int size, int shuffles) {
         Optional<Double> estimatedCost = checkDatabase(size, shuffles);
@@ -14,20 +18,30 @@ public class FifteenPuzzleEstimator {
             return estimatedCost.get();
         }
 
-        if (requestCount >= REQUEST_LIMIT) {
+        if (requestCount.get() >= REQUEST_LIMIT) {
             // TODO ->  need te return type from the mss
             getLastRecordsFromDB();
             double[][] inputs = null;
             double[] outputs = null;
+
+            lock.writeLock().lock();
             this.estimationFunction = new PolynomialRegression(inputs, outputs);
+            lock.writeLock().unlock();
+
+            this.requestCount.set(0);
         }
 
         double[] inputFeatures = new double[] {
             size,
             shuffles
         };
-        requestCount++;
-        return estimationFunction.estimate(inputFeatures);
+        requestCount.incrementAndGet();
+
+        lock.readLock().lock();
+        double estimation = estimationFunction.estimate(inputFeatures);
+        lock.readLock().unlock();
+
+        return estimation;
     }
 
     public Optional<Double> checkDatabase(int size, int shuffles) {
