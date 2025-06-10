@@ -1,6 +1,8 @@
 package pt.ulisboa.tecnico.cnv.resourcemanager.common;
 
 import java.time.LocalDateTime;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class Instance {
     private String instanceId;
@@ -14,13 +16,14 @@ public class Instance {
     private LocalDateTime lowCpuStartTime;
     private boolean markedForTermination;
     private int pendingJobs;
+    private final AtomicReference<Double> accumulatedComplexity = new AtomicReference<Double>(0d);
 
     public enum InstanceState {
         PENDING, RUNNING, STOPPING, STOPPED, TERMINATED
     }
 
     public Instance(String instanceId, String publicIpAddress,
-            String privateIpAddress) {
+                    String privateIpAddress) {
         this.instanceId = instanceId;
         this.publicIpAddress = publicIpAddress;
         this.privateIpAddress = privateIpAddress;
@@ -113,6 +116,16 @@ public class Instance {
 
     public void incrementPendingJobs() {
         this.pendingJobs++;
+    }
+
+    public Double getAccumulatedComplexity() {
+        return accumulatedComplexity.get();
+    }
+    public void incrementAccumulatedComplexity(double complexity) {
+        this.accumulatedComplexity.accumulateAndGet(complexity, Double::sum);
+    }
+    public void decrementAccumulatedComplexity(double complexity) {
+        this.incrementAccumulatedComplexity(-complexity);
     }
 
     public void decrementPendingJobs() {

@@ -3,6 +3,7 @@ package pt.ulisboa.tecnico.cnv.resourcemanager.loadbalancer.handlers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
+import pt.ulisboa.tecnico.cnv.resourcemanager.common.Instance;
 import pt.ulisboa.tecnico.cnv.resourcemanager.common.InstancePool;
 
 import java.io.IOException;
@@ -58,23 +59,42 @@ public abstract class GenericGameLoadHandler implements HttpHandler {
     }
 
     protected String routeRequestToWorker(Map<String, String> workload, double complexity) {
-        // TODO - Choose the worker instance based on the workload complexity
-        String baseUrl = null;
+        Optional<Instance> chosenWorker = this.chooseWorker(complexity);
+        if (chosenWorker.isEmpty()) {
+            return "Could not find worker instance for request";
+        }
 
         // Dispatch the request to the worker instance
+        Instance worker = chosenWorker.get();
+        String baseUrl = chosenWorker.get().getPublicIpAddress();
+        worker.incrementAccumulatedComplexity(complexity);
         Optional<HttpResponse<String>> response = dispatchRequest(workload, baseUrl);
+
         if (response.isPresent()) {
+            worker.decrementAccumulatedComplexity(complexity);
             return response.get().body();
         } else {
+            worker.decrementAccumulatedComplexity(complexity);
             return "Error while dispatching request.";
         }
+    }
+
+    /***
+     * Decides if it should send the request to an aws lambda or to a worker from
+     * the instance pool
+     * @param complexity the estimated cost of the request
+     * @return the instance or empty if it could not find any
+     */
+    private Optional<Instance> chooseWorker(double complexity) {
+        // TODO -> implement lambda functions
+        return instancePool.selectInstanceForRequest();
     }
 
     /***
      * Dispatch request to the worker instance.
      * Returns an Optional containing the HttpResponse if successful, or an empty Optional if an error occurs.
      */
-    protected Optional<HttpResponse<String>> dispatchRequest(Map<String, String> workload, String baseUrl) {
+    private Optional<HttpResponse<String>> dispatchRequest(Map<String, String> workload, String baseUrl) {
         String query = mapToQuery(workload);
         String fullUrl = baseUrl + "?" + query;
 
