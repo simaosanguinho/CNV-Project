@@ -53,8 +53,8 @@ public class ResourceManager {
         InstancePool instancePool = new InstancePool(
                 ec2Client, cloudWatchClient, amiId, instanceType, keyPairName,
                 securityGroupIds, subnetId, minInstances, maxInstances);
-        MSS mss = MSS.getInstance();
-        Thread loadbalancer = new Thread(new LoadBalancer(instancePool, mss));
+        /* MSS mss = MSS.getInstance(); */
+        Thread loadbalancer = new Thread(new LoadBalancer(instancePool));
         Thread autoscaler = new Thread(new AutoScaler(instancePool));
         loadbalancer.start();
         autoscaler.start();

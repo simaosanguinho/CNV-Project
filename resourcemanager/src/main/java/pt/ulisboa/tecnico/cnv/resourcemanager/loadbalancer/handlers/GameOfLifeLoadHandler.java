@@ -14,8 +14,8 @@ public class GameOfLifeLoadHandler extends GenericGameLoadHandler {
     private final GameOfLifeEstimator estimator;
 
 
-    public GameOfLifeLoadHandler(InstancePool instancePool, MSS mss) {
-        super(instancePool, mss);
+    public GameOfLifeLoadHandler(InstancePool instancePool) {
+        super(instancePool);
         this.estimator = new GameOfLifeEstimator();
     }
 

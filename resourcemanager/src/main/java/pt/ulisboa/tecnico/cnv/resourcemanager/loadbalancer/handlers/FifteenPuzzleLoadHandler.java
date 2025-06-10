@@ -13,9 +13,8 @@ public class FifteenPuzzleLoadHandler extends GenericGameLoadHandler {
 
     private final FifteenPuzzleEstimator estimator;
 
-    public FifteenPuzzleLoadHandler(InstancePool instancePool, MSS mss) {
-        super(instancePool, mss);
-        this.mss = mss;
+    public FifteenPuzzleLoadHandler(InstancePool instancePool) {
+        super(instancePool);
         this.estimator = new FifteenPuzzleEstimator();
     }
 

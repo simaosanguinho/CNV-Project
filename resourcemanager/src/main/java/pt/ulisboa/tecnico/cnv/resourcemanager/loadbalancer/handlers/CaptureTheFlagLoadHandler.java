@@ -16,9 +16,8 @@ public class CaptureTheFlagLoadHandler extends GenericGameLoadHandler {
 
     private final CaptureTheFlagEstimator estimator;
 
-    public CaptureTheFlagLoadHandler(InstancePool instancePool, MSS mss) {
-        super(instancePool, mss);
-        this.mss = mss;
+    public CaptureTheFlagLoadHandler(InstancePool instancePool) {
+        super(instancePool);
         this.estimator = new CaptureTheFlagEstimator();
     }
 

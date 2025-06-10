@@ -1,15 +1,24 @@
 package pt.ulisboa.tecnico.cnv.resourcemanager.loadbalancer.estimators;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import pt.ulisboa.tecnico.cnv.mss.MSS;
+
+import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+import com.amazonaws.services.dynamodbv2.xspec.M;
+import pt.ulisboa.tecnico.cnv.mss.MSS;
+
+import com.amazonaws.services.dynamodbv2.xspec.M;
 
 public class GameOfLifeEstimator {
 
     private final int REQUEST_LIMIT = 40; // limit to 40 requests until the model is trained again
-
+    public MSS mss = new MSS();
     private PolynomialRegression estimationFunction;
     private final AtomicInteger requestCount = new AtomicInteger(0);
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
@@ -30,11 +39,24 @@ public class GameOfLifeEstimator {
         }
 
         if (requestCount.get() >= REQUEST_LIMIT) {
-            // TODO ->  need te return type from the mss
-            getLastRecordsFromDB();
-            double[][] inputs = null;
-            double[] outputs = null;
+            double[][] records = getLastRecordsFromDB();
+            if (records == null || records.length == 0) {
+                System.out.println("No records found in the database to train the model.");
+                return -1; // or throw an exception
+            }
+            double[][] inputs = new double[records.length][2];
+            double[] outputs = new double[records.length];
+            for (int i = 0; i < records.length; i++) {
+                inputs[i][0] = records[i][0];
+                inputs[i][1] = records[i][1];
+                outputs[i] = records[i][2];
+            }
 
+            System.out.println("Training model with the following records:");
+            for (double[] record : records) {
+                System.out.printf("MapFilename: %.2f, Iterations: %.2f, Cost: %.2f%n",
+                        record[0], record[1], record[2]);
+            }
             this.lock.writeLock().lock();
             this.estimationFunction = new PolynomialRegression(inputs, outputs);
             this.lock.writeLock().unlock();
@@ -60,11 +82,28 @@ public class GameOfLifeEstimator {
         // Check if the request is already in the database
         // If it is, return the estimated cost
         // If not, add the request to the database and return null
-        //TODO
+    Map<String, AttributeValue> item = mss.readFromGameOfLife(mapFilename, iterations);
+    if (item != null && item.containsKey("Cost")) {
+        double cost = Double.parseDouble(item.get("Cost").getN());
+        return Optional.of(cost);
+    }
         return Optional.empty();
     }
 
-    public void getLastRecordsFromDB() {
-        // TODO -> this will not return void
+    public double[][] getLastRecordsFromDB() {
+    List<Map<String, AttributeValue>> lastRecords = mss.getLastXFromGameOfLife(REQUEST_LIMIT);
+       if (lastRecords == null || lastRecords.isEmpty()) {
+           System.out.println("No records found in the database to train the model.");
+           return null;
+       }
+
+       return lastRecords.stream()
+               .map(item -> new double[] {
+                   Double.parseDouble(item.get("MapFilename").getN()),
+                   Double.parseDouble(item.get("Iterations").getN()),
+                   Double.parseDouble(item.get("Cost").getN()),
+               })
+               .toArray(double[][]::new);
+        
     }
 }

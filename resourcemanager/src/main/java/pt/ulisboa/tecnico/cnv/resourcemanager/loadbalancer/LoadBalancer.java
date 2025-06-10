@@ -14,10 +14,8 @@ import java.net.InetSocketAddress;
 public class LoadBalancer implements Runnable {
 
     InstancePool instancePool;
-    MSS mss;
 
-    public LoadBalancer(InstancePool instancePool, MSS mss) {
-        this.mss = mss;
+    public LoadBalancer(InstancePool instancePool) {
         this.instancePool = instancePool;
     }
 
@@ -27,9 +25,9 @@ public class LoadBalancer implements Runnable {
             HttpServer server = HttpServer.create(new InetSocketAddress(8001), 0);
             server.setExecutor(java.util.concurrent.Executors.newCachedThreadPool());
             server.createContext("/", new RootLoadHandler());
-            server.createContext("/gameoflife", new GameOfLifeLoadHandler(instancePool, mss));
-            server.createContext("/fifteenpuzzle", new FifteenPuzzleLoadHandler(instancePool, mss));
-            server.createContext("/capturetheflag", new CaptureTheFlagLoadHandler(instancePool, mss));
+            server.createContext("/gameoflife", new GameOfLifeLoadHandler(instancePool));
+            server.createContext("/fifteenpuzzle", new FifteenPuzzleLoadHandler(instancePool));
+            server.createContext("/capturetheflag", new CaptureTheFlagLoadHandler(instancePool));
             server.start();
             System.out.println("LoadBalancer started on port 8001");
         } catch (IOException e) {

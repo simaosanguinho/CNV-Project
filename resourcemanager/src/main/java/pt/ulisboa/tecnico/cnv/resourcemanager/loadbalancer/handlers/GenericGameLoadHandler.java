@@ -22,11 +22,9 @@ import pt.ulisboa.tecnico.cnv.mss.MSS;
 public abstract class GenericGameLoadHandler implements HttpHandler {
 
     protected InstancePool instancePool;
-    protected MSS mss;
 
-    public GenericGameLoadHandler(InstancePool instancePool, MSS mss) {
+    public GenericGameLoadHandler(InstancePool instancePool) {
         this.instancePool = instancePool;
-        this.mss = mss;
     }
 
     /***
