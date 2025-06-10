@@ -10,14 +10,17 @@ import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.xspec.M;
 
 import pt.ulisboa.tecnico.cnv.mss.MSS;
+import pt.ulisboa.tecnico.cnv.resourcemanager.loadbalancer.parsers.RegressionDataParser;
+import pt.ulisboa.tecnico.cnv.resourcemanager.loadbalancer.parsers.RegressionPuzzleParser;
 
 public class FifteenPuzzleEstimator {
 
     private final int REQUEST_LIMIT = 3; // limit to 40 requests until the model is trained again
     public MSS mss = new MSS();
-    private PolynomialRegression estimationFunction;
     private final AtomicInteger requestCount = new AtomicInteger(3);
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+    private final RegressionPuzzleParser parser = new RegressionPuzzleParser();
+    private PolynomialRegression estimationFunction = new PolynomialRegression(parser);
 
     public double estimateCost(int size, int shuffles) {
         Optional<Double> estimatedCost = checkDatabase(size, shuffles);
@@ -26,29 +29,18 @@ public class FifteenPuzzleEstimator {
         }
 
         if (requestCount.get() >= REQUEST_LIMIT) {
-            // TODO ->  need te return type from the mss
-            double[][] records = getLastRecordsFromDB();
-            if (records == null || records.length == 0) {
+            Optional<RegressionDataParser.Points> records = getLastRecordsFromDB();
+
+            if (records.isEmpty()) {
                 System.out.println("No records found in the database to train the model.");
-                return -1; // or throw an exception
-            }
-            double[][] inputs = new double[records.length][2];
-            double[] outputs = new double[records.length];
-            for (int i = 0; i < records.length; i++) {
-                inputs[i][0] = records[i][0];
-                inputs[i][1] = records[i][1];
-                outputs[i] = records[i][2];
+                return -1; // TODO -> throw an exception
             }
 
-            System.out.println("Training model with the following records:");
-            for (double[] record : records) {
-                System.out.printf("Size: %.2f, Shuffles: %.2f, Cost: %.2f%n",
-                        record[0], record[1], record[2]);
-            }
+            // TODO -> print records
 
             // print records content
             lock.writeLock().lock();
-            this.estimationFunction = new PolynomialRegression(inputs, outputs);
+            this.estimationFunction = new PolynomialRegression(records.get().getInputs(), records.get().getOutputs());
             lock.writeLock().unlock();
 
             this.requestCount.set(0);
@@ -79,20 +71,8 @@ public class FifteenPuzzleEstimator {
         return Optional.empty();
     }
 
-    public double[][] getLastRecordsFromDB() {
+    public Optional<RegressionDataParser.Points> getLastRecordsFromDB() {
        List<Map<String, AttributeValue>> lastRecords = mss.getLastXFromFifteenPuzzle(REQUEST_LIMIT);
-       if (lastRecords == null || lastRecords.isEmpty()) {
-           System.out.println("No records found in the database to train the model.");
-           return null;
-       }
-
-       return lastRecords.stream()
-               .map(item -> new double[] {
-                   Double.parseDouble(item.get("Size").getN()),
-                   Double.parseDouble(item.get("Shuffles").getN()),
-                   Double.parseDouble(item.get("Cost").getN()),
-               })
-               .toArray(double[][]::new);
-        
+       return parser.parseDB(lastRecords);
     }
 }

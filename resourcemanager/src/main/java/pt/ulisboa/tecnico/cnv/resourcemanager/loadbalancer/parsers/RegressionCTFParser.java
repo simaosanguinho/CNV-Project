@@ -1,5 +1,7 @@
 package pt.ulisboa.tecnico.cnv.resourcemanager.loadbalancer.parsers;
 
+import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+
 import java.io.*;
 import java.util.*;
 import java.util.Map;
@@ -13,9 +15,27 @@ public class RegressionCTFParser implements RegressionDataParser {
         return type == 'A' ? 1d : (type == 'B' ? 2d : 3d);
     }
 
-    public Optional<Points> parseMap(Map<String, String> workload) {
-        // TODO
-        return Optional.empty();
+    public Optional<Points> parseDB(List<Map<String, AttributeValue>> dbRecords) {
+        double[][] records = dbRecords.stream()
+                .map(record -> {
+                    double gridSize = Double.parseDouble(record.get("GridSize").getN());
+                    double numBlueAgents = Double.parseDouble(record.get("NumBlueAgents").getN());
+                    double numRedAgents = Double.parseDouble(record.get("NumRedAgents").getN());
+                    double flagPlacementType = this.resolveFlagPlacementType(record.get("FlagPlacementType").getS().charAt(0));
+                    double cost = Double.parseDouble(record.get("Cost").getN());
+                    return new double[] { gridSize, numBlueAgents, numRedAgents, flagPlacementType, cost };
+                })
+                .toArray(double[][]::new);
+        double[][] inputs = new double[records.length][4];
+        double[] outputs = new double[records.length];
+        for (int i = 0; i < records.length; i++) {
+            inputs[i][0] = records[i][0];
+            inputs[i][1] = records[i][1];
+            inputs[i][2] = records[i][2];
+            inputs[i][3] = records[i][3];
+            outputs[i] = records[i][4];
+        }
+        return Optional.of(new Points(inputs,outputs));
     }
 
     public Optional<Points> parseDefault() {
@@ -45,10 +65,9 @@ public class RegressionCTFParser implements RegressionDataParser {
                 }
             }
 
-            Points points = new Points();
-            points.inputs = inputsList.toArray(new double[inputsList.size()][]);
-            points.outputs = outputsList.stream().mapToDouble(Double::doubleValue).toArray();
-            return Optional.of(points);
+            double[][] inputs = inputsList.toArray(new double[inputsList.size()][]);
+            double[] outputs = outputsList.stream().mapToDouble(Double::doubleValue).toArray();
+            return Optional.of(new Points(inputs, outputs));
 
         } catch (IOException e) {
             return Optional.empty();

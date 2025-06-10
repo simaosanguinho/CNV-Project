@@ -11,14 +11,17 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 
 import pt.ulisboa.tecnico.cnv.mss.MSS;
+import pt.ulisboa.tecnico.cnv.resourcemanager.loadbalancer.parsers.RegressionCTFParser;
+import pt.ulisboa.tecnico.cnv.resourcemanager.loadbalancer.parsers.RegressionDataParser;
 
 public class CaptureTheFlagEstimator {
 
-    private PolynomialRegression estimationFunction;
     private final AtomicInteger requestCount = new AtomicInteger(0);
     private final int REQUEST_LIMIT = 3; // limit to 40 requests until the model is trained again
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
     public MSS mss = new MSS();
+    private final RegressionCTFParser parser = new RegressionCTFParser();
+    private PolynomialRegression estimationFunction = new PolynomialRegression(parser);
 
     public double estimateCost(int gridSize, int numBlueAgents, int numRedAgents, char flagPlacementType) {
         Optional<Double> estimatedCost = checkDatabase(gridSize, numBlueAgents, numRedAgents, flagPlacementType);
@@ -28,31 +31,17 @@ public class CaptureTheFlagEstimator {
         }
 
         if (requestCount.get() >= REQUEST_LIMIT) {
-            // TODO -> need te return type from the mss
-            double[][] records = getLastRecordsFromDB();
-            if (records == null || records.length == 0) {
+            Optional<RegressionDataParser.Points> records = getLastRecordsFromDB();
+
+            if (records.isEmpty()) {
                 System.out.println("No records found in the database to train the model.");
-                return -1; // or throw an exception
-            }
-            double[][] inputs = new double[records.length][4];
-            double[] outputs = new double[records.length];
-            for (int i = 0; i < records.length; i++) {
-                inputs[i][0] = records[i][0];
-                inputs[i][1] = records[i][1];
-                inputs[i][2] = records[i][2];
-                inputs[i][3] = records[i][3];
-                outputs[i] = records[i][4];
+                return -1; // TODO throw an exception
             }
 
-            // print records content
-            System.out.println("Training model with the following records:");
-            for (double[] record : records) {
-                System.out.printf("GridSize: %.2f, NumBlueAgents: %.2f, NumRedAgents: %.2f, FlagPlacementType: %.2f, Cost: %.2f%n",
-                        record[0], record[1], record[2], record[3], record[4]);
-            }
+            // TODO print records
 
             lock.writeLock().lock();
-            this.estimationFunction = new PolynomialRegression(inputs, outputs);
+            this.estimationFunction = new PolynomialRegression(records.get().getInputs(), records.get().getOutputs());
             lock.writeLock().unlock();
 
             requestCount.set(0);
@@ -62,8 +51,7 @@ public class CaptureTheFlagEstimator {
                 gridSize,
                 numBlueAgents,
                 numRedAgents,
-                flagPlacementType == 'A' ? 1 : (flagPlacementType == 'B' ? 2 : 3)
-
+                parser.resolveFlagPlacementType(flagPlacementType)
         };
         requestCount.incrementAndGet();
 
@@ -77,7 +65,6 @@ public class CaptureTheFlagEstimator {
     public Optional<Double> checkDatabase(int gridSize, int numBlueAgents, int numRedAgents, char flagPlacementType) {
         // Check if the request is already in the database
         // If it is, return the estimated cost
-        // If not, add the request to the database and return null
         Map<String, AttributeValue> read = mss.readFromCaptureTheFlag(gridSize, numBlueAgents, numRedAgents,
                 String.valueOf(flagPlacementType));
         if (read != null && read.containsKey("Cost")) {
@@ -88,23 +75,9 @@ public class CaptureTheFlagEstimator {
         return Optional.empty();
     }
 
-    public double[][] getLastRecordsFromDB() {
+    public Optional<RegressionDataParser.Points> getLastRecordsFromDB() {
         List<Map<String, AttributeValue>> lastRecords = mss.getLastXFromCaptureTheFlag(REQUEST_LIMIT);
-        if (lastRecords.isEmpty()) {
-            System.out.println("No records found in the database.");
-            return null;
-        }
-        return lastRecords.stream()
-                .map(record -> {
-                    double gridSize = Double.parseDouble(record.get("GridSize").getN());
-                    double numBlueAgents = Double.parseDouble(record.get("NumBlueAgents").getN());
-                    double numRedAgents = Double.parseDouble(record.get("NumRedAgents").getN());
-                    double flagPlacementType = record.get("FlagPlacementType").getS().charAt(0) == 'A' ? 1
-                            : record.get("FlagPlacementType").getS().charAt(0) == 'B' ? 2 : 3;
-                    double cost = Double.parseDouble(record.get("Cost").getN());
-                    return new double[] { gridSize, numBlueAgents, numRedAgents, flagPlacementType, cost };
-                })
-                .toArray(double[][]::new);
+        return parser.parseDB(lastRecords);
     }
 
 }

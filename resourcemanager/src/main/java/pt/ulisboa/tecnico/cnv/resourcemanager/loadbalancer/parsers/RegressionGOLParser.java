@@ -1,5 +1,7 @@
 package pt.ulisboa.tecnico.cnv.resourcemanager.loadbalancer.parsers;
 
+import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+
 import java.io.*;
 import java.util.*;
 import java.util.Map;
@@ -20,9 +22,22 @@ public class RegressionGOLParser implements RegressionDataParser {
         return 0;
     }
 
-    public Optional<Points> parseMap(Map<String, String> workload) {
-        //TODO
-        return Optional.empty();
+    public Optional<Points> parseDB(List<Map<String, AttributeValue>> dbRecords) {
+        double[][] records = dbRecords.stream()
+                .map(item -> new double[]{
+                        Double.parseDouble(item.get("MapFilename").getN()),
+                        Double.parseDouble(item.get("Iterations").getN()),
+                        Double.parseDouble(item.get("Cost").getN()),
+                })
+                .toArray(double[][]::new);
+        double[][] inputs = new double[records.length][2];
+        double[] outputs = new double[records.length];
+        for (int i = 0; i < records.length; i++) {
+            inputs[i][0] = records[i][0];
+            inputs[i][1] = records[i][1];
+            outputs[i] = records[i][2];
+        }
+        return Optional.of(new Points(inputs, outputs));
     }
 
     public Optional<Points> parseDefault() {
@@ -52,10 +67,9 @@ public class RegressionGOLParser implements RegressionDataParser {
                 }
             }
 
-            Points points = new Points();
-            points.inputs = inputsList.toArray(new double[inputsList.size()][]);
-            points.outputs = outputsList.stream().mapToDouble(Double::doubleValue).toArray();
-            return Optional.of(points);
+            double[][] inputs = inputsList.toArray(new double[inputsList.size()][]);
+            double[] outputs = outputsList.stream().mapToDouble(Double::doubleValue).toArray();
+            return Optional.of(new Points(inputs, outputs));
 
         } catch (IOException e) {
             return Optional.empty();

@@ -50,18 +50,18 @@ public class MSS {
      * .withCredentials(new EnvironmentVariableCredentialsProvider())
      * .withRegion(AWS_REGION)
      * .build();
-     * 
+     *
      * try {
      * String tableName = "CaptureTheFlag";
-     * 
-     * 
+     *
+     *
      * // Describe our new table
      * DescribeTableRequest describeTableRequest = new
      * DescribeTableRequest().withTableName(tableName);
      * TableDescription tableDescription =
      * dynamoDB.describeTable(describeTableRequest).getTable();
      * System.out.println("Table Description: " + tableDescription);
-     * 
+     *
      * // USAGE Example
      * // Insert into CaptureTheFlag
      * /* insertIntoCaptureTheFlag(10, 5, 5, "A", 20);
@@ -69,10 +69,10 @@ public class MSS {
      * insertIntoCaptureTheFlag(20, 10, 10, "C", 30);
      * insertIntoCaptureTheFlag(20, 5, 15, "D", 25);
      * insertIntoCaptureTheFlag(10, 2, 8, "E", 18);
-     * 
-     * 
+     *
+     *
      * readFromCaptureTheFlag(10, 5, 5, "A");
-     * 
+     *
      * System.out.println("Reading last 2 entries from CaptureTheFlag:");
      * getLastXFromCaptureTheFlag(2);
      */
@@ -133,22 +133,22 @@ public class MSS {
         return result.getItem();
     }
 
-public Map<String, AttributeValue> readFromFifteenPuzzle(int size, int shuffles) {
-    Map<String, AttributeValue> key = new HashMap<>();
-    key.put("Size", new AttributeValue().withN(String.valueOf(size)));
-    key.put("Shuffles", new AttributeValue().withN(String.valueOf(shuffles)));
+    public Map<String, AttributeValue> readFromFifteenPuzzle(int size, int shuffles) {
+        Map<String, AttributeValue> key = new HashMap<>();
+        key.put("Size", new AttributeValue().withN(String.valueOf(size)));
+        key.put("Shuffles", new AttributeValue().withN(String.valueOf(shuffles)));
 
-    GetItemRequest request = new GetItemRequest()
-            .withTableName("FifteenPuzzle")
-            .withKey(key);
+        GetItemRequest request = new GetItemRequest()
+                .withTableName("FifteenPuzzle")
+                .withKey(key);
 
-    System.out.println("Reading FifteenPuzzle with Size: " + size + ", Shuffles: " + shuffles);
+        System.out.println("Reading FifteenPuzzle with Size: " + size + ", Shuffles: " + shuffles);
 
-    GetItemResult result = dynamoDB.getItem(request);
-    System.out.println("Read FifteenPuzzle Item: " + result.getItem());
+        GetItemResult result = dynamoDB.getItem(request);
+        System.out.println("Read FifteenPuzzle Item: " + result.getItem());
 
-    return result.getItem();
-}
+        return result.getItem();
+    }
 
     public Map<String, AttributeValue> readFromGameOfLife(String mapFilename, int iterations) {
 
