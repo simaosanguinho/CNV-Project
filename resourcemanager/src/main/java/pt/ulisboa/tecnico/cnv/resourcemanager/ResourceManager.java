@@ -46,7 +46,7 @@ public class ResourceManager {
     } else {
       System.err.println("AMI ID not provided. Please set the IMAGE_PATH environment variable.");
     }
-    String instanceType = "t3.micro";
+    String instanceType = "t2.micro";
     List<String> securityGroupIds =
         Arrays.asList(securityGroup != null ? securityGroup : "default");
     String subnetId = null; // Will use default subnet if null
