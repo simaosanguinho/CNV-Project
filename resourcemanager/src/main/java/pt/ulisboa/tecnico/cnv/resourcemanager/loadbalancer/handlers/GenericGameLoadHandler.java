@@ -93,9 +93,10 @@ public abstract class GenericGameLoadHandler implements HttpHandler {
     String query = mapToQuery(workload);
     String fullUrl = "http://" + baseUrl + ":8000/" + game + "?" + query;
     System.out.println("Dispatching request to " + fullUrl);
-    try (HttpClient client = HttpClient.newHttpClient()) {
+    HttpClient client = HttpClient.newHttpClient();
+    try {
       HttpRequest request = HttpRequest.newBuilder().uri(URI.create(fullUrl)).GET().build();
-
+      
       return Optional.of(client.send(request, HttpResponse.BodyHandlers.ofString()));
 
     } catch (IOException | InterruptedException e) {
