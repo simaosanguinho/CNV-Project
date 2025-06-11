@@ -1,5 +1,5 @@
 #!/bin/bash
-<
+
 source config.sh
 
 aws iam create-role \
@@ -22,7 +22,7 @@ aws lambda create-function \
 	--runtime java11 \
 	--timeout 200 \
 	--memory-size 512 \
-	--role arn:aws:iam::$AWS_ACCOUNT_ID:role/lambda-role>
+	--role arn:aws:iam::$AWS_ACCOUNT_ID:role/lambda-role
 
 echo "Capture the Flag Lambda function created successfully."
 

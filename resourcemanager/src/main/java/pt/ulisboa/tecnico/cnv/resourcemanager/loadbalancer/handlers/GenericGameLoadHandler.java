@@ -1,7 +1,5 @@
 package pt.ulisboa.tecnico.cnv.resourcemanager.loadbalancer.handlers;
 
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URLEncoder;
@@ -12,15 +10,47 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+
+import org.apache.commons.lang3.tuple.Pair;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+
 import pt.ulisboa.tecnico.cnv.resourcemanager.common.Instance;
 import pt.ulisboa.tecnico.cnv.resourcemanager.common.InstancePool;
+import pt.ulisboa.tecnico.cnv.resourcemanager.common.LambdaPool;
+import software.amazon.awssdk.auth.credentials.EnvironmentVariableCredentialsProvider;
+import software.amazon.awssdk.core.SdkBytes;
+import software.amazon.awssdk.services.lambda.LambdaClient;
+import software.amazon.awssdk.services.lambda.model.InvokeRequest;
+import software.amazon.awssdk.services.lambda.model.InvokeResponse;
+import software.amazon.awssdk.services.lambda.model.LambdaException;
+
+
+
 
 public abstract class GenericGameLoadHandler implements HttpHandler {
 
   protected InstancePool instancePool;
+  protected final long CTF_TRESHOLD = 7435999; // 74.359990000 seconds
+  protected final long FIFTEEN_TRESHOLD = 3894330;
+  protected final long GOL_TRESHOLD = 3899946;
+  protected LambdaPool lambdaPool;
+  LambdaClient awsLambda = LambdaClient.builder()
+      .region(software.amazon.awssdk.regions.Region.EU_WEST_1) // Set your AWS region here
+      .credentialsProvider(EnvironmentVariableCredentialsProvider.create())
+      .build();
 
+  
   public GenericGameLoadHandler(InstancePool instancePool) {
+    
     this.instancePool = instancePool;
+    this.lambdaPool = new LambdaPool(
+        "capturetheflag-lambda",
+        "gameoflife-lambda",
+        "fifteenpuzzle-lambda"
+    );
   }
 
   /***
@@ -51,44 +81,65 @@ public abstract class GenericGameLoadHandler implements HttpHandler {
   }
 
   protected String routeRequestToWorker(Map<String, String> workload, double complexity, String game) {
-    Optional<Instance> chosenWorker = this.chooseWorker(complexity);
-    if (chosenWorker.isEmpty()) {
+    Pair<String, Optional<Instance>> chosenWorker = this.chooseWorker(complexity, game);
+    if (chosenWorker.getRight().isEmpty()) {
       return "Could not find worker instance for request";
     }
-
-    // Dispatch the request to the worker instance
-    Instance worker = chosenWorker.get();
-    String baseUrl = chosenWorker.get().getPublicIpAddress();
+    // Lambda Worker
+    if (chosenWorker.getLeft().equals("lambda")) {
+      // If the chosen worker is a lambda, we can directly return the lambda's name
+      System.out.println("Dispatching request to Lambda worker for game: " + game);
+      String response = dispatchRequestLambda(workload, game);
+      if (response != null) {
+        return response;
+      } else {
+        return "Error while dispatching request to Lambda worker.";
+      }
+    }
+    // VM Worker
+    else {
+    System.out.println("Dispatching request to VM worker for game: " + game);
+      // Dispatch the request to the worker instance
+    Instance worker = chosenWorker.getRight().get();
+    String baseUrl = chosenWorker.getRight().get().getPublicIpAddress();
     worker.incrementAccumulatedComplexity(complexity);
-    Optional<HttpResponse<String>> response = dispatchRequest(workload, baseUrl, game);
+    Optional<HttpResponse<String>> response = dispatchRequestVM(workload, baseUrl, game);
 
     if (response.isPresent()) {
       worker.decrementAccumulatedComplexity(complexity);
       return response.get().body();
     } else {
       worker.decrementAccumulatedComplexity(complexity);
-      return "Error while dispatching request.";
+      return "Error while dispatching request to VM worker.";
     }
+    }
+    
   }
 
   /***
    * Decides if it should send the request to an aws lambda or to a worker from
    * the instance pool
    * @param complexity the estimated cost of the request
-   * @return the instance or empty if it could not find any
+   * @return the instance and its type or empty if it could not find any
    */
-  private Optional<Instance> chooseWorker(double complexity) {
+  private Pair<String, Optional<Instance>> chooseWorker(double complexity, String game) {
     // TODO -> implement lambda functions
+    if (game.equals("capturetheflag") && complexity < CTF_TRESHOLD) {
+      return Pair.of("lambda", Optional.ofNullable(lambdaPool.getCtfLambda()));
+    } else if (game.equals("gameoflife") && complexity < GOL_TRESHOLD) {
+      return Pair.of("lambda", Optional.ofNullable(lambdaPool.getGolLambda()));
+    } else if (game.equals("fifteenpuzzle") && complexity < FIFTEEN_TRESHOLD) {
+      return Pair.of("lambda", Optional.ofNullable(lambdaPool.getFifteenPuzzleLambda()));
+    }
 
-
-    return instancePool.selectInstanceForRequest();
+    return Pair.of("vm", instancePool.selectInstanceForRequest());
   }
 
   /***
    * Dispatch request to the worker instance.
    * Returns an Optional containing the HttpResponse if successful, or an empty Optional if an error occurs.
    */
-  private Optional<HttpResponse<String>> dispatchRequest(
+  private Optional<HttpResponse<String>> dispatchRequestVM(
       Map<String, String> workload, String baseUrl, String game) {
     String query = mapToQuery(workload);
     String fullUrl = "http://" + baseUrl + ":8000/" + game + "?" + query;
@@ -105,6 +156,36 @@ public abstract class GenericGameLoadHandler implements HttpHandler {
     return Optional.empty();
   }
 
+ private String dispatchRequestLambda(Map<String, String> workload, String game) {
+    try {
+
+        ObjectMapper mapper = new ObjectMapper();
+        String json = mapper.writeValueAsString(workload);
+
+        SdkBytes payload = SdkBytes.fromUtf8String(json);
+        String functionName = game + "-lambda";
+/*         System.out.println("Dispatching request to Lambda function: " + functionName + " with payload: " + json); */
+
+        InvokeRequest request = InvokeRequest.builder()
+            .functionName(functionName)
+            .payload(payload)
+            .build();
+
+        // Invoke Lambda
+        InvokeResponse res = awsLambda.invoke(request);
+        String value = res.payload().asUtf8String();
+        System.out.println(value);
+        return value;
+
+    } catch (LambdaException e) {
+        System.err.println(e.getMessage());
+        return null;
+    } catch (Exception e) {
+        e.printStackTrace(); // handle JSON or other unexpected errors
+    }
+    return null;
+}
+
   /** Parse map with workload to query string for HTTP request. */
   private String mapToQuery(Map<String, String> workload) {
     StringBuilder result = new StringBuilder();
@@ -118,4 +199,6 @@ public abstract class GenericGameLoadHandler implements HttpHandler {
     }
     return result.toString();
   }
+
+
 }

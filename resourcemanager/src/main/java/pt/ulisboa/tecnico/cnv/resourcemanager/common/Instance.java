@@ -5,6 +5,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class Instance {
   private String instanceId;
+  private String name;
   private String publicIpAddress;
   private String privateIpAddress;
   private InstanceState state;
@@ -32,6 +33,11 @@ public class Instance {
     this.launchTime = LocalDateTime.now();
     this.lastCpuUtilization = 0.0;
     this.markedForTermination = false;
+  }
+
+  /* FOR LAMBDA FUNCTIONS */
+  public Instance(String name) {
+    this.name = name;
   }
 
   public String getInstanceId() {
@@ -118,6 +124,10 @@ public class Instance {
     this.incrementAccumulatedComplexity(-complexity);
   }
 
+  public String getName() {
+    return name;
+  }
+
 
   public boolean canBeTerminated() {
     return markedForTermination && getAccumulatedComplexity() == 0;
@@ -126,7 +136,7 @@ public class Instance {
   @Override
   public String toString() {
     return String.format(
-        "Instance[id=%s, ip=%s, state=%s, cpu=%.2f%%, jobs=%d, marked=%b]",
+        "Instance[id=%s, ip=%s, state=%s, cpu=%.2f%%, marked=%b]",
         instanceId, publicIpAddress, state, lastCpuUtilization, markedForTermination);
   }
 }
