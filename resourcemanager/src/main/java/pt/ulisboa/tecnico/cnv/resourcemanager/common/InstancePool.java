@@ -74,17 +74,21 @@ public class InstancePool {
     return instances.values().stream().filter(Instance::isMarkedForTermination).toList();
   }
 
-  public int getRunningInstanceCount() {
-    return getRunningInstances().size();
-  }
+    public int getRunningInstanceCount() {
+        return getRunningInstances().size();
+    }
 
-  public boolean canScaleUp() {
-    return getRunningInstanceCount() < maxInstances;
-  }
+    public int getTotalInstanceCount() {
+        return instances.size();
+    }
 
-  public boolean canScaleDown() {
-    return getRunningInstanceCount() > minInstances;
-  }
+    public boolean canScaleUp() {
+        return getTotalInstanceCount() < maxInstances;
+    }
+
+    public boolean canScaleDown() {
+        return getTotalInstanceCount() > minInstances;
+    }
 
   public Instance createNewInstance() {
     if (!canScaleUp()) {
@@ -123,31 +127,35 @@ public class InstancePool {
     }
   }
 
-  public void terminateInstance(String instanceId) {
-    Instance instance = getInstance(instanceId);
-    if (instance == null) {
-      logger.warning("Instance not found for termination: " + instanceId);
-      return;
-    }
+    public boolean terminateInstance(String instanceId) {
+        Instance instance = getInstance(instanceId);
+        if (instance == null) {
+            logger.warning("Instance not found for termination: " + instanceId);
+            return false;
+        }
 
-    if (!instance.canBeTerminated()) {
-      logger.warning("Cannot terminate instance - has pending jobs: " + instanceId);
-      return;
-    }
+        if (!instance.canBeTerminated()) {
+            logger.warning("Cannot terminate instance - has pending jobs: " +
+                    instanceId);
+            return false;
+        }
 
     try {
       TerminateInstancesRequest terminateRequest =
           TerminateInstancesRequest.builder().instanceIds(instanceId).build();
 
-      ec2Client.terminateInstances(terminateRequest);
-      instance.setState(Instance.InstanceState.TERMINATED);
-      removeInstance(instanceId);
-      logger.info("Terminated instance: " + instanceId);
+            ec2Client.terminateInstances(terminateRequest);
+            instance.setState(Instance.InstanceState.TERMINATED);
+            removeInstance(instanceId);
+            logger.info("Terminated instance: " + instanceId);
+            return true;
 
-    } catch (Exception e) {
-      logger.severe("Failed to terminate instance " + instanceId + ": " + e.getMessage());
+        } catch (Exception e) {
+            logger.severe("Failed to terminate instance " + instanceId + ": " +
+                    e.getMessage());
+            return false;
+        }
     }
-  }
 
   public double getCpuUtilization(String instanceId) {
     try {

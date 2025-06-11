@@ -1,23 +1,22 @@
 package pt.ulisboa.tecnico.cnv.resourcemanager.autoscaler;
 
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import pt.ulisboa.tecnico.cnv.resourcemanager.common.Instance;
 import pt.ulisboa.tecnico.cnv.resourcemanager.common.InstancePool;
 
 public class AutoScaler implements Runnable {
   private static final Logger logger = Logger.getLogger(AutoScaler.class.getName());
 
-  // Thresholds
-  private static final double HIGH_CPU_THRESHOLD = 80.0; // 80%
-  private static final double LOW_CPU_THRESHOLD = 20.0; // 20%
-  private static final long THRESHOLD_DURATION_MINUTES = 1; // 1 minute
+    // Thresholds
+    private static final double HIGH_CPU_THRESHOLD = 80.0; // 80%
+    private static final double LOW_CPU_THRESHOLD = 20.0; // 20%
 
-  // Monitoring interval
-  private static final long MONITORING_INTERVAL_SECONDS = 30; // Check every 30 seconds
+    // Monitoring interval
+    private static final long MONITORING_INTERVAL_SECONDS = 90; // Check every 90 seconds
 
   private final InstancePool instancePool;
   private volatile boolean running = true;
@@ -30,15 +29,26 @@ public class AutoScaler implements Runnable {
   public void run() {
     logger.info("AutoScaler started");
 
-    // create first instance if none exist
-    if (instancePool.getAllInstances().isEmpty()) {
-      Instance initialInstance = instancePool.createNewInstance();
-      if (initialInstance != null) {
-        logger.info("Created initial instance: " + initialInstance.getInstanceId());
-      } else {
-        logger.warning("Failed to create initial instance");
-      }
-    }
+        // Create first instance if none exist
+        if (instancePool.getAllInstances().isEmpty()) {
+            Instance initialInstance = instancePool.createNewInstance();
+            if (initialInstance != null) {
+                logger.info("Created initial instance: " +
+                        initialInstance.getInstanceId());
+            } else {
+                logger.warning("Failed to create initial instance");
+            }
+        }
+
+        // sleep    for 5 minutes to allow everything to stabilize
+        try {
+            Thread.sleep(TimeUnit.MINUTES.toMillis(5));
+        } catch (InterruptedException e) {
+            logger.warning("Initialization sleep interrupted");
+            Thread.currentThread().interrupt();
+        }
+        logger.info("Starting auto-scaling checks every " +
+                MONITORING_INTERVAL_SECONDS + " seconds");
 
     while (running) {
       try {
@@ -71,16 +81,27 @@ public class AutoScaler implements Runnable {
       return;
     }
 
-    // Check CPU utilization for each instance
-    for (Instance instance : runningInstances) {
-      checkInstanceCpuUtilization(instance);
-    }
+        // Calculate median CPU usage
+        double medianCpuUsage = calculateMedianCpuUsage(runningInstances);
+        logger.info(String.format("Median CPU usage: %.2f%%", medianCpuUsage));
 
-    // Check if we need to scale up
-    checkScaleUp(runningInstances);
-
-    // Check if we can terminate instances marked for termination
-    checkTerminateInstances();
+        // Scale up if median CPU is above high threshold
+        if (medianCpuUsage >= HIGH_CPU_THRESHOLD && instancePool.canScaleUp()) {
+            logger.info(String.format(
+                    "Scaling up - Median CPU (%.2f%%) >= threshold (%.2f%%)",
+                    medianCpuUsage, HIGH_CPU_THRESHOLD));
+            createNewInstance();
+        }
+        // Scale down if median CPU is below low threshold
+        else if (medianCpuUsage <= LOW_CPU_THRESHOLD &&
+                instancePool.canScaleDown()) {
+            logger.info(String.format(
+                    "Scaling down - Median CPU (%.2f%%) <= threshold (%.2f%%)",
+                    medianCpuUsage, LOW_CPU_THRESHOLD));
+            terminateInstance();
+        } else {
+            logger.fine("No scaling action needed");
+        }
 
     // Log current status periodically
     if (System.currentTimeMillis() % (5 * 60 * 1000) < MONITORING_INTERVAL_SECONDS * 1000) {
@@ -88,139 +109,73 @@ public class AutoScaler implements Runnable {
     }
   }
 
-  private void checkInstanceCpuUtilization(Instance instance) {
-    double cpuUtilization = instancePool.getCpuUtilization(instance.getInstanceId());
-    LocalDateTime now = LocalDateTime.now();
+    private double calculateMedianCpuUsage(List<Instance> runningInstances) {
+        // Get CPU utilization for all running instances
+        List<Double> cpuValues = runningInstances.stream()
+                .map(instance -> instancePool.getCpuUtilization(instance.getInstanceId()))
+                .sorted()
+                .collect(Collectors.toList());
 
-    // Update instance CPU data
-    instance.setLastCpuUtilization(cpuUtilization);
-    instance.setLastCpuCheckTime(now);
+        if (cpuValues.isEmpty()) {
+            return 0.0;
+        }
 
-    logger.fine(String.format("Instance %s CPU: %.2f%%", instance.getInstanceId(), cpuUtilization));
-
-    // Check for high CPU usage
-    if (cpuUtilization >= HIGH_CPU_THRESHOLD) {
-      handleHighCpuUsage(instance, now);
-    } else {
-      // Reset high CPU tracking if CPU drops below threshold
-      instance.setHighCpuStartTime(null);
-    }
-
-    // Check for low CPU usage (only if not already marked for termination)
-    if (!instance.isMarkedForTermination()) {
-      if (cpuUtilization <= LOW_CPU_THRESHOLD) {
-        handleLowCpuUsage(instance, now);
-      } else {
-        // Reset low CPU tracking if CPU rises above threshold
-        instance.setLowCpuStartTime(null);
-      }
-    }
-  }
-
-  private void handleHighCpuUsage(Instance instance, LocalDateTime now) {
-    if (instance.getHighCpuStartTime() == null) {
-      // First time seeing high CPU
-      instance.setHighCpuStartTime(now);
-      logger.info(
-          String.format(
-              "Instance %s started high CPU period at %.2f%%",
-              instance.getInstanceId(), instance.getLastCpuUtilization()));
-    } else {
-      // Check if high CPU has persisted for the threshold duration
-      long minutesHighCpu = ChronoUnit.MINUTES.between(instance.getHighCpuStartTime(), now);
-      if (minutesHighCpu >= THRESHOLD_DURATION_MINUTES) {
-        logger.warning(
-            String.format(
-                "Instance %s has high CPU (%.2f%%) for %d minutes",
-                instance.getInstanceId(), instance.getLastCpuUtilization(), minutesHighCpu));
-
-        // Trigger scale up if possible
-        triggerScaleUp("High CPU detected");
-
-        // Reset the timer to avoid constant scaling attempts
-        instance.setHighCpuStartTime(now);
-      }
-    }
-  }
-
-  private void handleLowCpuUsage(Instance instance, LocalDateTime now) {
-    if (instance.getLowCpuStartTime() == null) {
-      // First time seeing low CPU
-      instance.setLowCpuStartTime(now);
-      logger.fine(
-          String.format(
-              "Instance %s started low CPU period at %.2f%%",
-              instance.getInstanceId(), instance.getLastCpuUtilization()));
-    } else {
-      // Check if low CPU has persisted for the threshold duration
-      long minutesLowCpu = ChronoUnit.MINUTES.between(instance.getLowCpuStartTime(), now);
-      if (minutesLowCpu >= THRESHOLD_DURATION_MINUTES) {
-        logger.info(
-            String.format(
-                "Instance %s has low CPU (%.2f%%) for %d minutes - marking for termination",
-                instance.getInstanceId(), instance.getLastCpuUtilization(), minutesLowCpu));
-
-        // Mark for termination if we can scale down
-        if (instancePool.canScaleDown()) {
-          instance.setMarkedForTermination(true);
-          logger.info("Marked instance for termination: " + instance.getInstanceId());
+        int size = cpuValues.size();
+        if (size % 2 == 0) {
+            // Even number of instances - average of two middle values
+            return (cpuValues.get(size / 2 - 1) + cpuValues.get(size / 2)) / 2.0;
         } else {
-          logger.info("Cannot mark instance for termination - minimum instances reached");
+            // Odd number of instances - middle value
+            return cpuValues.get(size / 2);
         }
-
-        // Reset the timer
-        instance.setLowCpuStartTime(null);
-      }
     }
-  }
 
-  private void checkScaleUp(List<Instance> runningInstances) {
-    // Check if any instance has sustained high CPU and we can scale up
-    boolean needsScaling =
-        runningInstances.stream()
-            .anyMatch(instance -> instance.getLastCpuUtilization() >= HIGH_CPU_THRESHOLD);
-
-    if (needsScaling && instancePool.canScaleUp()) {
-      // Additional check: ensure we're not scaling too aggressively
-      long healthyInstances =
-          runningInstances.stream().filter(instance -> !instance.isMarkedForTermination()).count();
-
-      if (healthyInstances > 0) {
-        double avgCpuUtilization =
-            runningInstances.stream()
-                .filter(instance -> !instance.isMarkedForTermination())
-                .mapToDouble(Instance::getLastCpuUtilization)
-                .average()
-                .orElse(0.0);
-
-        if (avgCpuUtilization >= HIGH_CPU_THRESHOLD * 0.8) { // 64% average
-          triggerScaleUp("Average CPU utilization high");
+    private void createNewInstance() {
+        Instance newInstance = instancePool.createNewInstance();
+        if (newInstance != null) {
+            logger.info("Successfully created new instance: " +
+                    newInstance.getInstanceId());
+        } else {
+            logger.warning("Failed to create new instance");
         }
-      }
     }
-  }
 
-  private void triggerScaleUp(String reason) {
-    logger.info("Triggering scale up: " + reason);
-    Instance newInstance = instancePool.createNewInstance();
-    if (newInstance != null) {
-      logger.info("Successfully created new instance: " + newInstance.getInstanceId());
-    } else {
-      logger.warning("Failed to create new instance");
+    private void terminateInstance() {
+        // Find an instance that can be terminated (no pending jobs)
+        List<Instance> runningInstances = instancePool.getRunningInstances();
+
+        Instance instanceToTerminate = runningInstances.get(0);
+        // set marked for termination
+        instanceToTerminate.setMarkedForTermination(true);
+        // Terminate the instance
+        boolean terminated = instancePool.terminateInstance(instanceToTerminate.getInstanceId());
+        // if the instance didnt terminate, try more 3 times with 10 seconds delay
+        if (terminated) {
+            logger.info("Successfully terminated instance: " + instanceToTerminate.getInstanceId());
+        } else {
+            logger.warning("Failed to terminate instance: " + instanceToTerminate.getInstanceId() +
+                    ". Retrying...");
+            for (int i = 0; i < 3; i++) {
+                try {
+                    Thread.sleep(10000); // wait 10 seconds before retrying
+                    terminated = instancePool.terminateInstance(instanceToTerminate.getInstanceId());
+                    if (terminated) {
+                        logger.info("Successfully terminated instance after retry: " +
+                                instanceToTerminate.getInstanceId());
+                        break;
+                    }
+                } catch (InterruptedException e) {
+                    logger.warning("Termination retry interrupted");
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
+            if (!terminated) {  
+                logger.severe("Failed to terminate instance after retries: " +
+                        instanceToTerminate.getInstanceId());
+            }
+        }
     }
-  }
-
-  private void checkTerminateInstances() {
-    List<Instance> instancesToTerminate =
-        instancePool.getInstancesMarkedForTermination().stream()
-            .filter(Instance::canBeTerminated)
-            .toList();
-
-    for (Instance instance : instancesToTerminate) {
-      logger.info("Terminating instance with no pending jobs: " + instance.getInstanceId());
-      instancePool.terminateInstance(instance.getInstanceId());
-    }
-  }
 
   public void stop() {
     logger.info("Stopping AutoScaler...");
@@ -251,51 +206,36 @@ public class AutoScaler implements Runnable {
     List<Instance> allInstances = instancePool.getAllInstances();
     List<Instance> runningInstances = instancePool.getRunningInstances();
 
-    double avgCpuUtilization =
-        runningInstances.stream()
-            .mapToDouble(Instance::getLastCpuUtilization)
-            .average()
-            .orElse(0.0);
+        double medianCpuUtilization = runningInstances.isEmpty() ? 0.0
+                : calculateMedianCpuUsage(runningInstances);
 
     int totalPendingJobs = allInstances.stream().mapToInt(Instance::getPendingJobs).sum();
 
-    return new AutoScalerMetrics(
-        allInstances.size(),
-        runningInstances.size(),
-        instancePool.getInstancesMarkedForTermination().size(),
-        avgCpuUtilization,
-        totalPendingJobs);
-  }
-
-  public static class AutoScalerMetrics {
-    public final int totalInstances;
-    public final int runningInstances;
-    public final int instancesMarkedForTermination;
-    public final double averageCpuUtilization;
-    public final int totalPendingJobs;
-
-    public AutoScalerMetrics(
-        int totalInstances,
-        int runningInstances,
-        int instancesMarkedForTermination,
-        double averageCpuUtilization,
-        int totalPendingJobs) {
-      this.totalInstances = totalInstances;
-      this.runningInstances = runningInstances;
-      this.instancesMarkedForTermination = instancesMarkedForTermination;
-      this.averageCpuUtilization = averageCpuUtilization;
-      this.totalPendingJobs = totalPendingJobs;
+        return new AutoScalerMetrics(allInstances.size(), runningInstances.size(),
+                medianCpuUtilization, totalPendingJobs);
     }
 
-    @Override
-    public String toString() {
-      return String.format(
-          "AutoScalerMetrics[total=%d, running=%d, marked=%d, avgCpu=%.2f%%, jobs=%d]",
-          totalInstances,
-          runningInstances,
-          instancesMarkedForTermination,
-          averageCpuUtilization,
-          totalPendingJobs);
+    public static class AutoScalerMetrics {
+        public final int totalInstances;
+        public final int runningInstances;
+        public final double medianCpuUtilization;
+        public final int totalPendingJobs;
+
+        public AutoScalerMetrics(int totalInstances, int runningInstances,
+                double medianCpuUtilization,
+                int totalPendingJobs) {
+            this.totalInstances = totalInstances;
+            this.runningInstances = runningInstances;
+            this.medianCpuUtilization = medianCpuUtilization;
+            this.totalPendingJobs = totalPendingJobs;
+        }
+
+        @Override
+        public String toString() {
+            return String.format(
+                    "AutoScalerMetrics[total=%d, running=%d, medianCpu=%.2f%%, jobs=%d]",
+                    totalInstances, runningInstances, medianCpuUtilization,
+                    totalPendingJobs);
+        }
     }
-  }
 }
