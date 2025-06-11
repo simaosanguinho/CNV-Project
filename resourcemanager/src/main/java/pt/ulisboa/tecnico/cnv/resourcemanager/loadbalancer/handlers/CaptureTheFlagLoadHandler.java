@@ -50,7 +50,7 @@ public class CaptureTheFlagLoadHandler extends GenericGameLoadHandler {
         estimator.estimateCost(gridSize, numBlueAgents, numRedAgents, flagPlacementType);
 
     // route the request to a worker/lambda, receive the response
-    String response = routeRequestToWorker(parameters, estimatedCost);
+    String response = routeRequestToWorker(parameters, estimatedCost, "capturetheflag");
 
     // send response to the client
     he.sendResponseHeaders(200, 0);

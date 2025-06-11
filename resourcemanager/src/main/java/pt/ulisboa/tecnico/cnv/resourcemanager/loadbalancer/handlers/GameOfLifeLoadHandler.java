@@ -36,7 +36,7 @@ public class GameOfLifeLoadHandler extends GenericGameLoadHandler {
     double estimatedCost = estimator.estimateCost(iterations, mapFilename);
 
     // route the request to a worker/lambda, receive the response
-    String response = routeRequestToWorker(parameters, estimatedCost);
+    String response = routeRequestToWorker(parameters, estimatedCost, "gameoflife");
 
     // TODO send response to the client
     he.sendResponseHeaders(200, 0);

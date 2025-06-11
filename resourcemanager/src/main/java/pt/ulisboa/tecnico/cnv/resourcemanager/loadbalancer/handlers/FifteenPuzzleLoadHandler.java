@@ -36,7 +36,7 @@ public class FifteenPuzzleLoadHandler extends GenericGameLoadHandler {
     double estimatedCost = estimator.estimateCost(size, shuffles);
 
     // route the request to a worker/lambda, receive the response
-    String response = routeRequestToWorker(parameters, estimatedCost);
+    String response = routeRequestToWorker(parameters, estimatedCost, "fifteenpuzzle");
 
     // TODO send response to the client
     he.sendResponseHeaders(200, 0);

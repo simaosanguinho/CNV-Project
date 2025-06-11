@@ -50,7 +50,7 @@ public abstract class GenericGameLoadHandler implements HttpHandler {
     return result;
   }
 
-  protected String routeRequestToWorker(Map<String, String> workload, double complexity) {
+  protected String routeRequestToWorker(Map<String, String> workload, double complexity, String game) {
     Optional<Instance> chosenWorker = this.chooseWorker(complexity);
     if (chosenWorker.isEmpty()) {
       return "Could not find worker instance for request";
@@ -60,7 +60,7 @@ public abstract class GenericGameLoadHandler implements HttpHandler {
     Instance worker = chosenWorker.get();
     String baseUrl = chosenWorker.get().getPublicIpAddress();
     worker.incrementAccumulatedComplexity(complexity);
-    Optional<HttpResponse<String>> response = dispatchRequest(workload, baseUrl);
+    Optional<HttpResponse<String>> response = dispatchRequest(workload, baseUrl, game);
 
     if (response.isPresent()) {
       worker.decrementAccumulatedComplexity(complexity);
@@ -87,12 +87,13 @@ public abstract class GenericGameLoadHandler implements HttpHandler {
    * Returns an Optional containing the HttpResponse if successful, or an empty Optional if an error occurs.
    */
   private Optional<HttpResponse<String>> dispatchRequest(
-      Map<String, String> workload, String baseUrl) {
+      Map<String, String> workload, String baseUrl, String game) {
     String query = mapToQuery(workload);
-    String fullUrl = baseUrl + "?" + query;
-
+    String fullUrl = "http://" + baseUrl + ":8000/" + game + "?" + query;
+    System.out.println("Dispatching request to " + fullUrl);
     try (HttpClient client = HttpClient.newHttpClient()) {
       HttpRequest request = HttpRequest.newBuilder().uri(URI.create(fullUrl)).GET().build();
+
       return Optional.of(client.send(request, HttpResponse.BodyHandlers.ofString()));
 
     } catch (IOException | InterruptedException e) {
