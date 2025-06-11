@@ -15,10 +15,9 @@ import java.util.Map;
 import pt.ulisboa.tecnico.cnv.javassist.tools.ICount;
 import pt.ulisboa.tecnico.cnv.mss.MSS;
 
-public class GameOfLifeHandler
-    implements HttpHandler, RequestHandler<Map<String, String>, String> {
+public class GameOfLifeHandler implements HttpHandler, RequestHandler<Map<String, String>, String> {
 
-  private final static ObjectMapper MAPPER = new ObjectMapper();
+  private static final ObjectMapper MAPPER = new ObjectMapper();
   private static Path metricsDir;
   private MSS mss = MSS.getInstance();
 
@@ -30,9 +29,7 @@ public class GameOfLifeHandler
     metricsDir = golDir;
   }
 
-  /**
-   * Input map model.
-   */
+  /** Input map model. */
   private static class GameOfLifeInput {
     public int[][] map;
 
@@ -40,13 +37,10 @@ public class GameOfLifeHandler
       this.map = map;
     }
 
-    public GameOfLifeInput() {
-    }
+    public GameOfLifeInput() {}
   }
 
-  /**
-   * Output (response) model.
-   */
+  /** Output (response) model. */
   private static class GameOfLifeResponse {
     public int[][] inputMap;
     public int[][] outputMap;
@@ -56,13 +50,10 @@ public class GameOfLifeHandler
       this.outputMap = outputMap;
     }
 
-    public GameOfLifeResponse() {
-    }
+    public GameOfLifeResponse() {}
   }
 
-  /**
-   * Game entrypoint.
-   */
+  /** Game entrypoint. */
   private String handleWorkload(int[][] inputMap, int iterations, String mapFilename) {
     int height = inputMap.length;
     int width = (height > 0) ? inputMap[0].length : 0;
@@ -112,19 +103,15 @@ public class GameOfLifeHandler
     }
   }
 
-  /**
-   * Entrypoint or HTTP requests.
-   */
+  /** Entrypoint or HTTP requests. */
   @Override
   public void handle(HttpExchange he) throws IOException {
     // Handling CORS.
     he.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
 
     if ("OPTIONS".equalsIgnoreCase(he.getRequestMethod())) {
-      he.getResponseHeaders().add("Access-Control-Allow-Methods",
-          "GET, OPTIONS");
-      he.getResponseHeaders().add("Access-Control-Allow-Headers",
-          "Content-Type,Authorization");
+      he.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, OPTIONS");
+      he.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type,Authorization");
       he.sendResponseHeaders(204, -1);
       return;
     }
@@ -138,7 +125,8 @@ public class GameOfLifeHandler
     String mapFilename = parameters.get("mapFilename");
 
     int[][] map;
-    try (InputStream mapFileInputStream = getClass().getClassLoader().getResourceAsStream(mapFilename)) {
+    try (InputStream mapFileInputStream =
+        getClass().getClassLoader().getResourceAsStream(mapFilename)) {
       GameOfLifeInput request = MAPPER.readValue(mapFileInputStream, GameOfLifeInput.class);
       map = request.map;
     } catch (NullPointerException | JsonProcessingException e) {
@@ -160,24 +148,25 @@ public class GameOfLifeHandler
 
     // save statistics to a file
     String stats = ICount.checkStatistics();
-    String fileName = String.format("ICOUNT Thread %s after Game of Life (%s, %s)",
-        Thread.currentThread().getId(), iterations, mapFilename);
+    String fileName =
+        String.format(
+            "ICOUNT Thread %s after Game of Life (%s, %s)",
+            Thread.currentThread().getId(), iterations, mapFilename);
     Path outputFile = metricsDir.resolve(fileName);
     try (BufferedWriter writer = Files.newBufferedWriter(outputFile)) {
       writer.write(stats);
     }
   }
 
-  /**
-   * Entrypoint for AWS Lambda.
-   */
+  /** Entrypoint for AWS Lambda. */
   @Override
   public String handleRequest(Map<String, String> event, Context context) {
     int iterations = Integer.parseInt(event.get("iterations"));
     String mapFilename = event.get("mapFilename");
 
     int[][] map;
-    try (InputStream mapFileInputStream = getClass().getClassLoader().getResourceAsStream(mapFilename)) {
+    try (InputStream mapFileInputStream =
+        getClass().getClassLoader().getResourceAsStream(mapFilename)) {
       GameOfLifeInput request = MAPPER.readValue(mapFileInputStream, GameOfLifeInput.class);
       map = request.map;
     } catch (IOException | NullPointerException e) {
@@ -188,9 +177,7 @@ public class GameOfLifeHandler
     return handleWorkload(map, iterations, mapFilename);
   }
 
-  /**
-   * For debugging use - to run from CLI.
-   */
+  /** For debugging use - to run from CLI. */
   public static void main(String[] args) {
     if (args.length < 2) {
       System.out.println(
@@ -200,8 +187,8 @@ public class GameOfLifeHandler
     String mapFilename = args[0];
 
     int[][] intMap;
-    try (InputStream mapFileInputStream = GameOfLifeHandler.class.getClassLoader().getResourceAsStream(
-        mapFilename)) {
+    try (InputStream mapFileInputStream =
+        GameOfLifeHandler.class.getClassLoader().getResourceAsStream(mapFilename)) {
       GameOfLifeInput request = MAPPER.readValue(mapFileInputStream, GameOfLifeInput.class);
       intMap = request.map;
     } catch (IOException | NullPointerException e) {
@@ -214,8 +201,7 @@ public class GameOfLifeHandler
     try {
       iterations = Integer.parseInt(args[1]);
     } catch (NumberFormatException e) {
-      System.err.println(
-          "The \"iterations\" argument should be a valid integer value.");
+      System.err.println("The \"iterations\" argument should be a valid integer value.");
       System.exit(1);
     }
 
@@ -235,9 +221,7 @@ public class GameOfLifeHandler
     System.out.println(gol.gridToString());
   }
 
-  /**
-   * Util method to convert a 2D int array to a byte array.
-   */
+  /** Util method to convert a 2D int array to a byte array. */
   private static byte[] convertMapToByteArray(int[][] map, int rows, int cols) {
     byte[] byteArray = new byte[rows * cols];
 
@@ -251,9 +235,7 @@ public class GameOfLifeHandler
     return byteArray;
   }
 
-  /**
-   * Parse query string into a map.
-   */
+  /** Parse query string into a map. */
   private Map<String, String> queryToMap(String query) {
     if (query == null) {
       return null;

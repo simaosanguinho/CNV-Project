@@ -10,9 +10,7 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
-
-public class RootHandler
-    implements HttpHandler, RequestHandler<Map<String, String>, String> {
+public class RootHandler implements HttpHandler, RequestHandler<Map<String, String>, String> {
 
   private final String HELLO_MSG = "Default Web Server<br>";
 
@@ -21,10 +19,8 @@ public class RootHandler
     // Handling CORS
     he.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
     if (he.getRequestMethod().equalsIgnoreCase("OPTIONS")) {
-      he.getResponseHeaders().add("Access-Control-Allow-Methods",
-                                  "GET, OPTIONS");
-      he.getResponseHeaders().add("Access-Control-Allow-Headers",
-                                  "Content-Type,Authorization");
+      he.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, OPTIONS");
+      he.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type,Authorization");
       he.sendResponseHeaders(204, -1);
       return;
     }
@@ -32,8 +28,7 @@ public class RootHandler
     // parse request
     URI requestedUri = he.getRequestURI();
     String query = requestedUri.getRawQuery();
-    if (query == null)
-      query = HELLO_MSG;
+    if (query == null) query = HELLO_MSG;
 
     // Return a simple OK 200 response
     he.sendResponseHeaders(200, 0);

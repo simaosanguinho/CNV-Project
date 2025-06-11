@@ -130,6 +130,14 @@ In order to obtain the tools to collect the metrics from the workloads and to ge
 - **`fifteen_puzzle_cost.py`** - generates the cost estimation function for the 15-Puzzle workload based on the collected metrics.
 - **`gol_cost.py`** - generates the cost estimation function for the Game of Life workload based on the collected metrics.
 
+
+### Run Formatter
+
+```
+mvn spotless:apply
+```
+
+
 ### Authors
 
 - **Simão Sanguinho** - 102082

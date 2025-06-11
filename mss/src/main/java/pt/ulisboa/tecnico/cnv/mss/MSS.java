@@ -31,6 +31,7 @@ public class MSS {
 
     public MSS() {
         try {
+            System.out.println("AWS_REGION: " + AWS_REGION);
             dynamoDB = AmazonDynamoDBClientBuilder.standard()
                     .withCredentials(new EnvironmentVariableCredentialsProvider())
                     .withRegion(AWS_REGION)
