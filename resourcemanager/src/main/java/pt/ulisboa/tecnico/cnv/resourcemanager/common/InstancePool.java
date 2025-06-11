@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import software.amazon.awssdk.services.cloudwatch.CloudWatchClient;
 import software.amazon.awssdk.services.cloudwatch.model.*;
 import software.amazon.awssdk.services.ec2.Ec2Client;
@@ -63,15 +64,14 @@ public class InstancePool {
   public List<Instance> getAllInstances() {
     return new ArrayList<>(instances.values());
   }
-
   public List<Instance> getRunningInstances() {
     return instances.values().stream()
         .filter(instance -> instance.getState() == Instance.InstanceState.RUNNING)
-        .toList();
+        .collect(Collectors.toList());
   }
-
+  
   public List<Instance> getInstancesMarkedForTermination() {
-    return instances.values().stream().filter(Instance::isMarkedForTermination).toList();
+    return instances.values().stream().filter(Instance::isMarkedForTermination).collect(Collectors.toList());
   }
 
     public int getRunningInstanceCount() {
