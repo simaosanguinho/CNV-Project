@@ -36,6 +36,7 @@ public class ResourceManager {
     if (amiIdPath != null) {
       // read the AMI ID from the specified file
       try {
+        System.out.println("Reading AMI ID from file: " + amiIdPath);
         amiId =
             new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(amiIdPath))).trim();
         System.out.println("AMI ID: " + amiId);

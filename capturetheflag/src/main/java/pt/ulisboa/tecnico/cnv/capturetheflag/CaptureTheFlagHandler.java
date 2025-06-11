@@ -58,7 +58,8 @@ public class CaptureTheFlagHandler implements HttpHandler, RequestHandler<Map<St
     @Override
     public void handle(HttpExchange he) throws IOException {
         // Handling CORS.
-        he.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
+        System.out.println("[INFO] Handling request: " + he.getRequestURI());
+    he.getResponseHeaders().add("Access-Control-Allow-Origin", "*");
 
         if ("OPTIONS".equalsIgnoreCase(he.getRequestMethod())) {
             he.getResponseHeaders().add("Access-Control-Allow-Methods", "GET, OPTIONS");
@@ -116,15 +117,19 @@ public class CaptureTheFlagHandler implements HttpHandler, RequestHandler<Map<St
         mss.insertIntoCaptureTheFlag(gridSize, numBlueAgents, numRedAgents, String.valueOf(flagPlacementType), stats);
     }
 
-    /**
+      /**
+     *
      * Entrypoint for AWS Lambda.
+    
      */
-    @Override
-    public String handleRequest(Map<String, String> event, Context context) {
-        int gridSize = Integer.parseInt(event.get("gridSize"));
-        int numBlueAgents = Integer.parseInt(event.get("numBlueAgents"));
-        int numRedAgents = Integer.parseInt(event.get("numRedAgents"));
-        char flagPlacementType = event.get("flagPlacementType").toUpperCase().charAt(0);
+      @Override
+      public String handleRequest(Map<String, String> event, Context context) {
+        
+    System.out.println("[INFO] Handling request LAMBDAAAAA: " + event);
+    int gridSize = Integer.parseInt(event.get("gridSize"));
+            int numBlueAgents = Integer.parseInt(event.get("numBlueAgents"));
+            int numRedAgents = Integer.parseInt(event.get("numRedAgents"));
+            char flagPlacementType = event.get("flagPlacementType").toUpperCase().charAt(0);
 
         if (!validateInputs(gridSize, numBlueAgents, numRedAgents, flagPlacementType)) {
             return "Invalid input. Please provide a valid grid size, number of blue agents, number of red agents and flag placement type (A, B or C).";

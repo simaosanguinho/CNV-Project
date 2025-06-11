@@ -79,6 +79,8 @@ public abstract class GenericGameLoadHandler implements HttpHandler {
    */
   private Optional<Instance> chooseWorker(double complexity) {
     // TODO -> implement lambda functions
+
+
     return instancePool.selectInstanceForRequest();
   }
 

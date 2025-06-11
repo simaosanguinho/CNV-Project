@@ -128,6 +128,7 @@ public class InstancePool {
   }
 
     public boolean terminateInstance(String instanceId) {
+      
         Instance instance = getInstance(instanceId);
         if (instance == null) {
             logger.warning("Instance not found for termination: " + instanceId);
@@ -245,9 +246,11 @@ public class InstancePool {
   }
 
   public Optional<Instance> selectInstanceForRequest() {
-    return getRunningInstances().stream()
+    Optional<Instance> result =  getRunningInstances().stream()
         .filter(instance -> !instance.isMarkedForTermination())
         .min(Comparator.comparingDouble(Instance::getAccumulatedComplexity));
+
+    return result;
   }
 
   public void printStatus() {

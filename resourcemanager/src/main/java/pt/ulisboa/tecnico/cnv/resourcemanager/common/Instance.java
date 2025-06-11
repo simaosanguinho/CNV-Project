@@ -14,7 +14,6 @@ public class Instance {
   private LocalDateTime highCpuStartTime;
   private LocalDateTime lowCpuStartTime;
   private boolean markedForTermination;
-  private int pendingJobs;
   private final AtomicReference<Double> accumulatedComplexity = new AtomicReference<Double>(0d);
 
   public enum InstanceState {
@@ -33,7 +32,6 @@ public class Instance {
     this.launchTime = LocalDateTime.now();
     this.lastCpuUtilization = 0.0;
     this.markedForTermination = false;
-    this.pendingJobs = 0;
   }
 
   public String getInstanceId() {
@@ -108,18 +106,6 @@ public class Instance {
     this.markedForTermination = markedForTermination;
   }
 
-  public int getPendingJobs() {
-    return pendingJobs;
-  }
-
-  public void setPendingJobs(int pendingJobs) {
-    this.pendingJobs = pendingJobs;
-  }
-
-  public void incrementPendingJobs() {
-    this.pendingJobs++;
-  }
-
   public Double getAccumulatedComplexity() {
     return accumulatedComplexity.get();
   }
@@ -132,20 +118,15 @@ public class Instance {
     this.incrementAccumulatedComplexity(-complexity);
   }
 
-  public void decrementPendingJobs() {
-    if (this.pendingJobs > 0) {
-      this.pendingJobs--;
-    }
-  }
 
   public boolean canBeTerminated() {
-    return markedForTermination && pendingJobs == 0;
+    return markedForTermination && getAccumulatedComplexity() == 0;
   }
 
   @Override
   public String toString() {
     return String.format(
         "Instance[id=%s, ip=%s, state=%s, cpu=%.2f%%, jobs=%d, marked=%b]",
-        instanceId, publicIpAddress, state, lastCpuUtilization, pendingJobs, markedForTermination);
+        instanceId, publicIpAddress, state, lastCpuUtilization, markedForTermination);
   }
 }
