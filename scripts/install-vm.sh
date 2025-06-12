@@ -5,28 +5,25 @@ source config.sh
 cmd="sudo yum update -y; sudo yum install java-11-amazon-corretto.x86_64 -y;"
 ssh -o StrictHostKeyChecking=no -i $AWS_EC2_SSH_KEYPAR_PATH ec2-user@$(cat instance.dns) $cmd
 
+
 # Install web server.
-zip -r CNV-Project.zip $WEBSERVER_PATH
-scp -o StrictHostKeyChecking=no -i $AWS_EC2_SSH_KEYPAR_PATH CNV-Project.zip ec2-user@$(cat instance.dns):
+# zip -r CNV-Project.zip $WEBSERVER_PATH
+scp -o StrictHostKeyChecking=no -i $AWS_EC2_SSH_KEYPAR_PATH \
+  "$WEBSERVER_PATH/webserver/target/webserver-1.0.0-SNAPSHOT-jar-with-dependencies.jar" \
+  ec2-user@$(cat instance.dns):/home/ec2-user/
 
-# Build web server.
-# unzip project
-cmd_unzip="unzip -d . CNV-Project.zip"
-ssh -o StrictHostKeyChecking=no -i $AWS_EC2_SSH_KEYPAR_PATH ec2-user@$(cat instance.dns) $cmd_unzip
+# also scp the config.sh
+scp -o StrictHostKeyChecking=no -i $AWS_EC2_SSH_KEYPAR_PATH \
+  "$WEBSERVER_PATH/scripts/config.sh" \
+  ec2-user@$(cat instance.dns):/home/ec2-user/
 
-# run project
-BASE_DIR="/home/ec2-user/CNV-Project"
-WEBSERVER_JAR="$BASE_DIR/webserver/target/webserver-1.0.0-SNAPSHOT-jar-with-dependencies.jar"
-JAVASSIST_JAR="$BASE_DIR/javassist/target/JavassistWrapper-1.0-jar-with-dependencies.jar"
-AGENT_OUTPUT_DIR="$BASE_DIR/output"
 
-cmd_run="java -cp "$WEBSERVER_JAR" \
-    -Xbootclasspath/a:"$JAVASSIST_JAR" \
-    -javaagent:"$WEBSERVER_JAR"=ICount:pt.ulisboa.tecnico.cnv.capturetheflag,pt.ulisboa.tecnico.cnv.fifteenpuzzle,pt.ulisboa.tecnico.cnv.gameoflife:"$AGENT_OUTPUT_DIR" \
-    pt.ulisboa.tecnico.cnv.webserver.WebServer"
-    
-#ssh -o StrictHostKeyChecking=no -i $AWS_EC2_SSH_KEYPAR_PATH ec2-user@$(cat instance.dns) $cmd_run
+WEBSERVER_JAR="/home/ec2-user/webserver-1.0.0-SNAPSHOT-jar-with-dependencies.jar"
+JAVA_AGENT="ICount:pt.ulisboa.tecnico.cnv.capturetheflag,pt.ulisboa.tecnico.cnv.fifteenpuzzle,pt.ulisboa.tecnico.cnv.gameoflife:output"
+
+cmd_run="java -javaagent:$WEBSERVER_JAR=$JAVA_AGENT -jar $WEBSERVER_JAR"
+
 
 # Setup web server to start on instance launch
-cmd="echo \"cd /home/ec2-user/CNV-Project && $cmd_run\" | sudo tee -a /etc/rc.local; sudo chmod +x /etc/rc.local"
+cmd="echo \"source /home/ec2-user/config.sh && $cmd_run\" | sudo tee -a /etc/rc.local; sudo chmod +x /etc/rc.local"
 ssh -o StrictHostKeyChecking=no -i $AWS_EC2_SSH_KEYPAR_PATH ec2-user@$(cat instance.dns) $cmd
