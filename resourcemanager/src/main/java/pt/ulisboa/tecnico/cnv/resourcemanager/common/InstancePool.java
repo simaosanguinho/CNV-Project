@@ -1,11 +1,7 @@
 package pt.ulisboa.tecnico.cnv.resourcemanager.common;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -27,6 +23,8 @@ import software.amazon.awssdk.services.ec2.model.TerminateInstancesRequest;
 
 public class InstancePool {
   private static final Logger logger = Logger.getLogger(InstancePool.class.getName());
+  // Total observation time in milliseconds.
+  private static long OBS_TIME = 1000 * 60 * 20;
 
   private final Map<String, Instance> instances = new ConcurrentHashMap<>();
   private final Ec2Client ec2Client;
@@ -194,36 +192,42 @@ public class InstancePool {
     }
 
   public double getCpuUtilization(String instanceId) {
+    System.out.println("Getting CPU utilization for instance " + instanceId);
     try {
-      Instant endTime = Instant.now();
-      Instant startTime = endTime.minusSeconds(300); // Last 5 minutes
+//      Instant endTime = Instant.now();
+//      Instant startTime = endTime.minusSeconds(600); // Last 5 minutes
+
+      Dimension instanceDimension =  Dimension.builder().name(instanceId).value(instanceId).build();
+//      List<Dimension> dims = new ArrayList<Dimension>();
+//      dims.add(instanceDimension);
 
       GetMetricStatisticsRequest request =
           GetMetricStatisticsRequest.builder()
               .namespace("AWS/EC2")
               .metricName("CPUUtilization")
               .dimensions(Dimension.builder().name("InstanceId").value(instanceId).build())
-              .startTime(startTime)
-              .endTime(endTime)
-              .period(60) // 1 minute intervals
+              .startTime((new Date(new Date().getTime() - OBS_TIME)).toInstant())
+              .endTime(new Date().toInstant())
+              .period(30) // 1 minute intervals
               .statistics(Statistic.AVERAGE)
               .build();
 
       GetMetricStatisticsResponse response = cloudWatchClient.getMetricStatistics(request);
-
+      System.out.println("Got CPU utilization response: " + response.toString());
 
       if (response.datapoints().isEmpty()) {
+        System.out.println("No datapoints available for instance " + instanceId);
         // update the cpu usage in the instance object
-        instances.get(instanceId).setLastCpuUtilization(0.0);
+        //instances.get(instanceId).setLastCpuUtilization(0.0);
         return 0.0; // No data available yet
       }
 
       // Get the most recent datapoint
       Optional<Datapoint> latestDatapoint =
           response.datapoints().stream().max(Comparator.comparing(Datapoint::timestamp));
-
+      System.out.println("Latest datapoint: " + latestDatapoint.toString());
       double usage = latestDatapoint.map(Datapoint::average).orElse(0.0);
-
+      System.out.println("CPU utilization: " + usage);
       // update the cpu usage in the instance object
       instances.get(instanceId).setLastCpuUtilization(usage);
 

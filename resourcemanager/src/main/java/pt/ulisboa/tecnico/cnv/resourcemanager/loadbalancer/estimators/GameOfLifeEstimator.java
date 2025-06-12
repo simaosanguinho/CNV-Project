@@ -34,13 +34,13 @@ public class GameOfLifeEstimator {
       }
 
       // TODO print records
-
+      this.requestCount.set(0);
       this.lock.writeLock().lock();
       this.estimationFunction =
           new PolynomialRegression(records.get().getInputs(), records.get().getOutputs());
       this.lock.writeLock().unlock();
 
-      this.requestCount.set(0);
+
     }
 
     Integer mapSize = parser.extractSize(mapFilename);

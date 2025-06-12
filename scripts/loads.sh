@@ -5,10 +5,10 @@ echo "Starting load test for 10 minutes..."
 END_TIME=$(($(date +%s) + 600))  # 10 minutes from now
 
 while [ $(date +%s) -lt $END_TIME ]; do
-    for i in {1..100}; do
+    for i in {1..5}; do
         curl -s "$URL" > /dev/null &
     done
-    sleep 1
+    sleep 2
 done
 
 wait

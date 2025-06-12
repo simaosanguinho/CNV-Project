@@ -18,7 +18,7 @@ public class AutoScaler implements Runnable {
   public static final double INDIVIDUAL_CPU_THRESHOLD = 80.0;
 
   // Monitoring interval
-  private static final long MONITORING_INTERVAL_SECONDS = 30; // Check every 90 seconds
+  private static final long MONITORING_INTERVAL_SECONDS = 120; // Check every 120 seconds
 
   private final InstancePool instancePool;
   private volatile boolean running = true;
@@ -43,12 +43,12 @@ public class AutoScaler implements Runnable {
     }
 
     // sleep for 5 minutes to allow everything to stabilize
-    /* try {
-      // Thread.sleep(TimeUnit.MINUTES.toMillis(5));
+    try {
+      Thread.sleep(TimeUnit.MINUTES.toMillis(5));
     } catch (InterruptedException e) {
       logger.warning("Initialization sleep interrupted");
       Thread.currentThread().interrupt();
-    } */
+    }
     logger.info("Starting auto-scaling checks every " +
         MONITORING_INTERVAL_SECONDS + " seconds");
 
@@ -106,22 +106,27 @@ public class AutoScaler implements Runnable {
 
     // Calculate median CPU usage
     double averageCpuUsage = calculateAverageCpuUsage(workingInstances); // this updates the instance classes cpu values with the new values
-    logger.info(String.format("Median CPU usage: %.2f%%", averageCpuUsage));
+    logger.info(String.format("Average CPU usage: %.2f%%", averageCpuUsage));
 
     instancePool.printStatus();
 
     // Scale up if average CPU is above high threshold
     if (averageCpuUsage >= HIGH_CPU_THRESHOLD && instancePool.canScaleUp()) {
       logger.info(String.format(
-          "Scaling up - Median CPU (%.2f%%) >= threshold (%.2f%%)",
+          "Scaling up - Average CPU (%.2f%%) >= threshold (%.2f%%)",
           averageCpuUsage, HIGH_CPU_THRESHOLD));
-      createNewInstance();
+      // create 20% of all the instances
+      int instancesToCreate = (int) Math.ceil(runningInstances.size() * 0.25);
+      for (int i = 0; i < instancesToCreate; i++) {
+        createNewInstance();
+      }
+
     }
     // Scale down if average CPU is below low threshold
     else if (averageCpuUsage <= LOW_CPU_THRESHOLD &&
         instancePool.canScaleDown()) {
       logger.info(String.format(
-          "Scaling down - Median CPU (%.2f%%) <= threshold (%.2f%%)",
+          "Scaling down - Average CPU (%.2f%%) <= threshold (%.2f%%)",
           averageCpuUsage, LOW_CPU_THRESHOLD));
       terminateInstance();
     } else {
@@ -173,6 +178,9 @@ public class AutoScaler implements Runnable {
 
     // make the average of the cpu values
     double sum = cpuValues.stream().mapToDouble(Double::doubleValue).sum();
+    // Print cpu value and average with colors
+    cpuValues.forEach(cpu -> System.out.printf("\u001B[31m%.2f\u001B[0m ", cpu));
+    System.out.printf("\u001B[32m%.2f\u001B[0m\n", sum / cpuValues.size());
     return sum / cpuValues.size();
   }
 

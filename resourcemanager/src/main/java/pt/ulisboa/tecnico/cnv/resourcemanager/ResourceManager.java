@@ -21,13 +21,13 @@ public class ResourceManager {
     // Initialize AWS clients
     Ec2Client ec2Client =
         Ec2Client.builder()
-            .region(Region.of(region != null ? region : "ue-west-1"))
+            .region(Region.of(region != null ? region : "eu-west-1"))
             .credentialsProvider(DefaultCredentialsProvider.create())
             .build();
 
     CloudWatchClient cloudWatchClient =
         CloudWatchClient.builder()
-            .region(Region.of(region != null ? region : "ue-west-1"))
+            .region(Region.of(region != null ? region : "eu-west-1"))
             .credentialsProvider(DefaultCredentialsProvider.create())
             .build();
 

@@ -22,7 +22,7 @@ for size in grid_sizes:
         for red in num_red_agents:
             for flag in flag_placements:
                 url = (
-                    f"http://localhost:8000/capturetheflag?"
+                    f"http://localhost:8001/capturetheflag?"
                     f"gridSize={size}&numBlueAgents={blue}&numRedAgents={red}&flagPlacementType={flag}"
                 )
                 try:
@@ -50,54 +50,54 @@ for size in grid_sizes:
                     })
 
 
-# Step 2: Read metrics files
-
-# Regex to extract 4-tuple from filename
-filename_pattern = re.compile(r'\((\d+),\s*(\d+),\s*(\d+),\s*([A-Z])\)')
-
-nblocks_pattern = re.compile(r'nblocks:\s*(\d+)')
-ninsts_pattern = re.compile(r'ninsts:\s*(\d+)')
-
-metrics_data = {}  # key: (size, blue, red, flag) -> {nblocks, ninsts}
-
-for filename in os.listdir(METRICS_PATH):
-    match = filename_pattern.search(filename)
-    if not match:
-        continue
-    size_f, blue_f, red_f, flag_f = match.groups()
-    size_f, blue_f, red_f = int(size_f), int(blue_f), int(red_f)
-
-    filepath = os.path.join(METRICS_PATH, filename)
-    with open(filepath, 'r') as f:
-        content = f.read()
-
-        nblocks_match = nblocks_pattern.search(content)
-        ninsts_match = ninsts_pattern.search(content)
-
-        if nblocks_match and ninsts_match:
-            nblocks = int(nblocks_match.group(1))
-            ninsts = int(ninsts_match.group(1))
-
-            metrics_data[(size_f, blue_f, red_f, flag_f)] = {
-                'nblocks': nblocks,
-                'ninsts': ninsts
-            }
-        else:
-            print(f"Skipping {filename} due to missing nblocks/ninsts")
-
-# Step 3: Add metrics info to results
-for res in results:
-    key = (res['gridSize'], res['numBlueAgents'], res['numRedAgents'], res['flagPlacementType'])
-    metric = metrics_data.get(key, {'nblocks': None, 'ninsts': None})
-    res['nblocks'] = metric['nblocks']
-    res['ninsts'] = metric['ninsts']
-
-# Step 4: Write all to CSV
-with open(output_file, 'w', newline='') as f:
-    fieldnames = ['gridSize', 'numBlueAgents', 'numRedAgents', 'flagPlacementType', 'ninsts', 'nblocks']
-    writer = csv.DictWriter(f, fieldnames=fieldnames)
-    writer.writeheader()
-    for row in results:
-        writer.writerow(row)
-
-print(f"\n✅ Results with metrics saved to {output_file}")
+# # Step 2: Read metrics files
+#
+# # Regex to extract 4-tuple from filename
+# filename_pattern = re.compile(r'\((\d+),\s*(\d+),\s*(\d+),\s*([A-Z])\)')
+#
+# nblocks_pattern = re.compile(r'nblocks:\s*(\d+)')
+# ninsts_pattern = re.compile(r'ninsts:\s*(\d+)')
+#
+# metrics_data = {}  # key: (size, blue, red, flag) -> {nblocks, ninsts}
+#
+# for filename in os.listdir(METRICS_PATH):
+#     match = filename_pattern.search(filename)
+#     if not match:
+#         continue
+#     size_f, blue_f, red_f, flag_f = match.groups()
+#     size_f, blue_f, red_f = int(size_f), int(blue_f), int(red_f)
+#
+#     filepath = os.path.join(METRICS_PATH, filename)
+#     with open(filepath, 'r') as f:
+#         content = f.read()
+#
+#         nblocks_match = nblocks_pattern.search(content)
+#         ninsts_match = ninsts_pattern.search(content)
+#
+#         if nblocks_match and ninsts_match:
+#             nblocks = int(nblocks_match.group(1))
+#             ninsts = int(ninsts_match.group(1))
+#
+#             metrics_data[(size_f, blue_f, red_f, flag_f)] = {
+#                 'nblocks': nblocks,
+#                 'ninsts': ninsts
+#             }
+#         else:
+#             print(f"Skipping {filename} due to missing nblocks/ninsts")
+#
+# # Step 3: Add metrics info to results
+# for res in results:
+#     key = (res['gridSize'], res['numBlueAgents'], res['numRedAgents'], res['flagPlacementType'])
+#     metric = metrics_data.get(key, {'nblocks': None, 'ninsts': None})
+#     res['nblocks'] = metric['nblocks']
+#     res['ninsts'] = metric['ninsts']
+#
+# # Step 4: Write all to CSV
+# with open(output_file, 'w', newline='') as f:
+#     fieldnames = ['gridSize', 'numBlueAgents', 'numRedAgents', 'flagPlacementType', 'ninsts', 'nblocks']
+#     writer = csv.DictWriter(f, fieldnames=fieldnames)
+#     writer.writeheader()
+#     for row in results:
+#         writer.writerow(row)
+#
+# print(f"\n✅ Results with metrics saved to {output_file}")

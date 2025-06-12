@@ -37,13 +37,13 @@ public class CaptureTheFlagEstimator {
         System.out.println("No records found in the database to train the model.");
         return -1; // TODO throw an exception
       }
-
+      requestCount.set(0);
       // TODO print records
       lock.writeLock().lock();
       this.estimationFunction =
           new PolynomialRegression(records.get().getInputs(), records.get().getOutputs());
       lock.writeLock().unlock();
-      requestCount.set(0);
+
     }
 
     double[] inputFeatures =

@@ -33,14 +33,14 @@ public class FifteenPuzzleEstimator {
         System.out.println("No records found in the database to train the model.");
         return -1; // TODO -> throw an exception
       }
-
+      this.requestCount.set(0);
       // print records content
       lock.writeLock().lock();
       this.estimationFunction =
           new PolynomialRegression(records.get().getInputs(), records.get().getOutputs());
       lock.writeLock().unlock();
 
-      this.requestCount.set(0);
+
     }
 
     double[] inputFeatures = new double[] {size, shuffles};
