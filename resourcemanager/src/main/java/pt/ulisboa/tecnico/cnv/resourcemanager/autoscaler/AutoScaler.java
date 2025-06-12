@@ -2,6 +2,7 @@ package pt.ulisboa.tecnico.cnv.resourcemanager.autoscaler;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -87,6 +88,9 @@ public class AutoScaler implements Runnable {
 
     // Get current running instances
     List<Instance> runningInstances = instancePool.getRunningInstances();
+    List<Instance> overloadedInstances = instancePool.getOverloadedInstances();
+    List<Instance> workingInstances = new ArrayList<>(runningInstances);
+    workingInstances.addAll(overloadedInstances);
 
     if (runningInstances.isEmpty()) {
       logger.warning("No running instances found");
@@ -94,7 +98,7 @@ public class AutoScaler implements Runnable {
     }
 
     // Calculate median CPU usage
-    double medianCpuUsage = calculateMedianCpuUsage(runningInstances); // this updates the instance classes cpu values with the new values
+    double medianCpuUsage = calculateMedianCpuUsage(workingInstances); // this updates the instance classes cpu values with the new values
     logger.info(String.format("Median CPU usage: %.2f%%", medianCpuUsage));
 
     // Scale up if median CPU is above high threshold

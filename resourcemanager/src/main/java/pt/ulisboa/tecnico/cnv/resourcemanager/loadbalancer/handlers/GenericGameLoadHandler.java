@@ -128,11 +128,11 @@ public abstract class GenericGameLoadHandler implements HttpHandler {
 
         boolean noAvailableWorker = instancePool.selectInstanceForRequest().isEmpty();
 
-        if ((game.equals("capturetheflag") && (complexity < CTF_TRESHOLD || noAvailableWorker))) {
+        if ((game.equals("capturetheflag") && (noAvailableWorker))) {
             return Pair.of("lambda", Optional.ofNullable(lambdaPool.getCtfLambda()));
-        } else if (game.equals("gameoflife") && (complexity < GOL_TRESHOLD || noAvailableWorker)) {
+        } else if (game.equals("gameoflife") && (noAvailableWorker)) {
             return Pair.of("lambda", Optional.ofNullable(lambdaPool.getGolLambda()));
-        } else if (game.equals("fifteenpuzzle") && (complexity < FIFTEEN_TRESHOLD || noAvailableWorker)) {
+        } else if (game.equals("fifteenpuzzle") && (noAvailableWorker)) {
             return Pair.of("lambda", Optional.ofNullable(lambdaPool.getFifteenPuzzleLambda()));
         }
 

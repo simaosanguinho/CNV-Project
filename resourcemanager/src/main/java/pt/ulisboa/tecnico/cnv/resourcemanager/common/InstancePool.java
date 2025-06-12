@@ -85,6 +85,16 @@ public class InstancePool {
         .filter(instance -> instance.getState() == Instance.InstanceState.RUNNING)
         .collect(Collectors.toList());
   }
+
+  public List<Instance> getOverloadedInstances() {
+    return instances.values().stream()
+            .filter(instance -> instance.getState() == Instance.InstanceState.OVERLOADED)
+            .collect(Collectors.toList());
+  }
+
+  public int getOverloadedInstanceCount() {
+    return getOverloadedInstances().size();
+  }
   
   public List<Instance> getInstancesMarkedForTermination() {
     return instances.values().stream().filter(Instance::isMarkedForTermination).collect(Collectors.toList());
@@ -280,6 +290,7 @@ public class InstancePool {
     logger.info("=== Instance Pool Status ===");
     logger.info("Total instances: " + instances.size());
     logger.info("Running instances: " + getRunningInstanceCount());
+    logger.info("Instances marked as overloaded" + getOverloadedInstanceCount());
     logger.info("Instances marked for termination: " + getInstancesMarkedForTermination().size());
 
     for (Instance instance : instances.values()) {
