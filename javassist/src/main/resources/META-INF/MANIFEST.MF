@@ -3,4 +3,5 @@ Premain-Class: pt.ulisboa.tecnico.cnv.javassist.JavassistAgent
 Agent-Class: pt.ulisboa.tecnico.cnv.javassist.JavassistAgent
 Can-Redefine-Classes: true
 Can-Retransform-Classes: true
+Main-Class: pt.ulisboa.tecnico.cnv.webserver.WebServer
 
