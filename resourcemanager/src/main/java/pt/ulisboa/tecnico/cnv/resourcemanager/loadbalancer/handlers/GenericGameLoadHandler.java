@@ -37,7 +37,7 @@ public abstract class GenericGameLoadHandler implements HttpHandler {
     protected final long GOL_TRESHOLD = 3899946;
     protected LambdaPool lambdaPool;
     LambdaClient awsLambda = LambdaClient.builder()
-            .region(Region.US_EAST_1) // Set your AWS region here
+            .region(Region.EU_WEST_1) // Set your AWS region here
             .credentialsProvider(EnvironmentVariableCredentialsProvider.create())
             .build();
 
