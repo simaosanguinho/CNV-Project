@@ -68,6 +68,17 @@ public class AutoScaler implements Runnable {
     logger.info("AutoScaler stopped");
   }
 
+  private void markOverloaded() {
+    List<Instance> runningInstances = instancePool.getRunningInstances();
+    for (Instance instance : runningInstances) {
+      // instances that have high cpu usage are marked as overloaded
+      // to avoid excessive requests
+      if (instance.getLastCpuUtilization() >= AutoScaler.INDIVIDUAL_CPU_THRESHOLD) {
+        instance.setState(Instance.InstanceState.OVERLOADED);
+      }
+    }
+  }
+
   private void performAutoScalingCheck() {
     logger.fine("Performing auto-scaling check...");
 
@@ -83,7 +94,7 @@ public class AutoScaler implements Runnable {
     }
 
     // Calculate median CPU usage
-    double medianCpuUsage = calculateMedianCpuUsage(runningInstances);
+    double medianCpuUsage = calculateMedianCpuUsage(runningInstances); // this updates the instance classes cpu values with the new values
     logger.info(String.format("Median CPU usage: %.2f%%", medianCpuUsage));
 
     // Scale up if median CPU is above high threshold
@@ -103,6 +114,10 @@ public class AutoScaler implements Runnable {
     } else {
       logger.fine("No scaling action needed");
     }
+
+    // after updating machines cpus mark the ones with excessive cpu as overloaded
+    // to avoid further requests
+    markOverloaded();
 
     // Log current status periodically
     if (System.currentTimeMillis() % (5 * 60 * 1000) < MONITORING_INTERVAL_SECONDS * 1000) {

@@ -137,6 +137,6 @@ public class Instance {
   public String toString() {
     return String.format(
         "Instance[id=%s, ip=%s, state=%s, cpu=%.2f%%, marked=%b]",
-        instanceId, publicIpAddress, state, lastCpuUtilization, markedForTermination);
+        instanceId, publicIpAddress, state, lastCpuUtilization.get(), markedForTermination);
   }
 }

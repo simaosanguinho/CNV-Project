@@ -237,12 +237,6 @@ public class InstancePool {
                 mapEc2StateToInstanceState(ec2Instance.state().name());
             instance.setState(newState);
 
-            // instances that have high cpu usage are marked as overloaded
-            // to avoid excessive requests
-            if (instance.getLastCpuUtilization() >= AutoScaler.INDIVIDUAL_CPU_THRESHOLD) {
-              instance.setState(Instance.InstanceState.OVERLOADED);
-            }
-
             // Update IP addresses if they've changed
             if (ec2Instance.publicIpAddress() != null) {
               instance.setPublicIpAddress(ec2Instance.publicIpAddress());
