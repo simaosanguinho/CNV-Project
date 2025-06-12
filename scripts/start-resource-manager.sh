@@ -43,24 +43,27 @@ scp -o StrictHostKeyChecking=no -i $AWS_EC2_SSH_KEYPAR_PATH config.sh ec2-user@$
 #also the image id
 scp -o StrictHostKeyChecking=no -i $AWS_EC2_SSH_KEYPAR_PATH image.id ec2-user@$(cat resource.dns):
 
-# Build web server.
 
 # run project
-BASE_DIR="/home/ec2-user/"
+BASE_DIR="/home/ec2-user"
 RESOURCE_JAR="$BASE_DIR/resourcemanager-1.0.0-SNAPSHOT-jar-with-dependencies.jar"
+#java -jar /home/ec2-user/resourcemanager-1.0.0-SNAPSHOT-jar-with-dependencies.jar
 
 cmd_run="source /home/ec2-user/config.sh; java -jar $RESOURCE_JAR"
 
-#ssh -o StrictHostKeyChecking=no -i $AWS_EC2_SSH_KEYPAR_PATH ec2-user@$(cat instance.dns) $cmd_run
+#ssh -o StrictHostKeyChecking=no -i $AWS_EC2_SSH_KEYPAR_PATH ec2-user@$(cat resource.dns)
+#cd /home/ec2-user/ && source /home/ec2-user/config.sh; java -jar /home/ec2-user/resourcemanager-1.0.0-SNAPSHOT-jar-with-dependencies.jar
 
-# Setup web server to start on instance launch
+ssh -o StrictHostKeyChecking=no -i $AWS_EC2_SSH_KEYPAR_PATH ec2-user@$(cat instance.dns) $cmd_run
+
+# Setup resource manager to start on instance launch
 cmd="echo \"cd /home/ec2-user/ && $cmd_run\" | sudo tee -a /etc/rc.local; sudo chmod +x /etc/rc.local"
 ssh -o StrictHostKeyChecking=no -i $AWS_EC2_SSH_KEYPAR_PATH ec2-user@$(cat resource.dns) $cmd
 
 # Step 3: test VM instance.
 # Requesting an instance reboot.
 aws ec2 reboot-instances --instance-ids $(cat resource.id)
-echo "Rebooting instance to test web server auto-start."
+echo "Rebooting instance to test resource manager auto-start."
 
 # Letting the instance shutdown.
 sleep 1

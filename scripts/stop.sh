@@ -17,5 +17,11 @@ $DIR/deregister-image.sh
 echo "Deleting Snapshot..."
 aws ec2 delete-snapshot --snapshot-id $(cat image.snapshot)
 
-echo "Stopping deployment infrastructure..."
-$DIR/terminate-deployment-template.sh
+echo "Deleting MSS..."
+$DIR/delete-mss.sh
+
+echo "Deleting Lambda Functions..."
+$DIR/function-deregister.sh
+
+echo "Stopping Resource Manager..."
+aws ec2 terminate-instances --instance-ids $(cat resource.id)

@@ -32,12 +32,13 @@ import software.amazon.awssdk.services.lambda.model.LambdaException;
 public abstract class GenericGameLoadHandler implements HttpHandler {
 
     protected InstancePool instancePool;
+    String region = System.getenv("AWS_DEFAULT_REGION");
     protected final long CTF_TRESHOLD = 7435999; // 74.359990000 seconds
     protected final long FIFTEEN_TRESHOLD = 3894330;
     protected final long GOL_TRESHOLD = 3899946;
     protected LambdaPool lambdaPool;
     LambdaClient awsLambda = LambdaClient.builder()
-            .region(Region.EU_WEST_1) // Set your AWS region here
+            .region(Region.of(region)) // Set your AWS region here
             .credentialsProvider(EnvironmentVariableCredentialsProvider.create())
             .build();
 

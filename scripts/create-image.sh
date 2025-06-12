@@ -23,6 +23,9 @@ echo "Waiting for image to be ready... (this can take a couple of minutes)"
 aws ec2 wait image-available --filters Name=name,Values=CNV-Image
 echo "Waiting for image to be ready... done! \o/"
 
+echo "Stopping VM instance..."
+aws ec2 terminate-instances --instance-ids $(cat instance.id)
+
 # Step 6: terminate the vm instance.
 #aws ec2 terminate-instances --instance-ids $(cat instance.id)
 
