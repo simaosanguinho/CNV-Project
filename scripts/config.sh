@@ -12,4 +12,6 @@ export AWS_EC2_SSH_KEYPAR_PATH=<path to aws ssh keypair>
 export AWS_SECURITY_GROUP=<name of your security group>
 export AWS_KEYPAIR_NAME=<name of your aws keypair>
 export WEBSERVER_PATH=../../CNV-Project
-export IMAGE_PATH=../image.id
+export IMAGE_PATH=/home/ec2-user/image.id
+export RESOURCE_MANAGER_JAR_PATH=../../CNV-Project/resourcemanager/target/resourcemanager-1.0.0-SNAPSHOT-jar-with-dependencies.jar
+
