@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import pt.ulisboa.tecnico.cnv.resourcemanager.autoscaler.AutoScaler;
 import software.amazon.awssdk.services.cloudwatch.CloudWatchClient;
 import software.amazon.awssdk.services.cloudwatch.model.Datapoint;
 import software.amazon.awssdk.services.cloudwatch.model.Dimension;
@@ -192,6 +193,8 @@ public class InstancePool {
       GetMetricStatisticsResponse response = cloudWatchClient.getMetricStatistics(request);
 
       if (response.datapoints().isEmpty()) {
+        // update the cpu usage in the instance object
+        instances.get(instanceId).setLastCpuUtilization(0.0);
         return 0.0; // No data available yet
       }
 
@@ -199,7 +202,12 @@ public class InstancePool {
       Optional<Datapoint> latestDatapoint =
           response.datapoints().stream().max(Comparator.comparing(Datapoint::timestamp));
 
-      return latestDatapoint.map(Datapoint::average).orElse(0.0);
+      double usage = latestDatapoint.map(Datapoint::average).orElse(0.0);
+
+      // update the cpu usage in the instance object
+      instances.get(instanceId).setLastCpuUtilization(usage);
+
+      return usage;
 
     } catch (Exception e) {
       logger.severe(
@@ -228,6 +236,12 @@ public class InstancePool {
             Instance.InstanceState newState =
                 mapEc2StateToInstanceState(ec2Instance.state().name());
             instance.setState(newState);
+
+            // instances that have high cpu usage are marked as overloaded
+            // to avoid excessive requests
+            if (instance.getLastCpuUtilization() >= AutoScaler.INDIVIDUAL_CPU_THRESHOLD) {
+              instance.setState(Instance.InstanceState.OVERLOADED);
+            }
 
             // Update IP addresses if they've changed
             if (ec2Instance.publicIpAddress() != null) {

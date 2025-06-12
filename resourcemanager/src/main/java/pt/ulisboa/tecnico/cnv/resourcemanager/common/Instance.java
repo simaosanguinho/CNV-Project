@@ -8,30 +8,30 @@ public class Instance {
   private String name;
   private String publicIpAddress;
   private String privateIpAddress;
-  private InstanceState state;
+  private final AtomicReference<InstanceState> state = new AtomicReference<>();
   private LocalDateTime launchTime;
   private LocalDateTime lastCpuCheckTime;
-  private double lastCpuUtilization;
+  private final AtomicReference<Double> lastCpuUtilization = new AtomicReference<>(0d);
   private LocalDateTime highCpuStartTime;
   private LocalDateTime lowCpuStartTime;
   private boolean markedForTermination;
-  private final AtomicReference<Double> accumulatedComplexity = new AtomicReference<Double>(0d);
+  private final AtomicReference<Double> accumulatedComplexity = new AtomicReference<>(0d);
 
   public enum InstanceState {
     PENDING,
     RUNNING,
     STOPPING,
     STOPPED,
-    TERMINATED
+    TERMINATED,
+    OVERLOADED
   }
 
   public Instance(String instanceId, String publicIpAddress, String privateIpAddress) {
     this.instanceId = instanceId;
     this.publicIpAddress = publicIpAddress;
     this.privateIpAddress = privateIpAddress;
-    this.state = InstanceState.PENDING;
+    this.state.set(InstanceState.PENDING);
     this.launchTime = LocalDateTime.now();
-    this.lastCpuUtilization = 0.0;
     this.markedForTermination = false;
   }
 
@@ -61,11 +61,11 @@ public class Instance {
   }
 
   public InstanceState getState() {
-    return state;
+    return this.state.get();
   }
 
   public void setState(InstanceState state) {
-    this.state = state;
+    this.state.set(state);
   }
 
   public LocalDateTime getLaunchTime() {
@@ -81,11 +81,11 @@ public class Instance {
   }
 
   public double getLastCpuUtilization() {
-    return lastCpuUtilization;
+    return lastCpuUtilization.get();
   }
 
   public void setLastCpuUtilization(double lastCpuUtilization) {
-    this.lastCpuUtilization = lastCpuUtilization;
+    this.lastCpuUtilization.set(lastCpuUtilization);
   }
 
   public LocalDateTime getHighCpuStartTime() {

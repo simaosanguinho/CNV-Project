@@ -14,6 +14,7 @@ public class AutoScaler implements Runnable {
   // Thresholds
   private static final double HIGH_CPU_THRESHOLD = 80.0; // 80%
   private static final double LOW_CPU_THRESHOLD = 20.0; // 20%
+  public static final double INDIVIDUAL_CPU_THRESHOLD = 80.0;
 
   // Monitoring interval
   private static final long MONITORING_INTERVAL_SECONDS = 30; // Check every 90 seconds

@@ -12,5 +12,7 @@ image.id
 instance.id
 instance.dns
 
+.idea/
+
 
 out*
