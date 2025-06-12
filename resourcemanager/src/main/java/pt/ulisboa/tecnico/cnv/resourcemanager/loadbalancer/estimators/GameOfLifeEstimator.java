@@ -12,7 +12,7 @@ import pt.ulisboa.tecnico.cnv.resourcemanager.loadbalancer.parsers.RegressionGOL
 
 public class GameOfLifeEstimator {
 
-  private final int REQUEST_LIMIT = 40; // limit to 40 requests until the model is trained again
+  private final int REQUEST_LIMIT = 100; // limit to 40 requests until the model is trained again
   public MSS mss = new MSS();
   private final AtomicInteger requestCount = new AtomicInteger(0);
   private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();

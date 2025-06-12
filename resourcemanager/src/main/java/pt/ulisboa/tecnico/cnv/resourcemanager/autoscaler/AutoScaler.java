@@ -94,26 +94,35 @@ public class AutoScaler implements Runnable {
 
     if (runningInstances.isEmpty()) {
       logger.warning("No running instances found");
+
+      if(instancePool.getPendingInstanceCount() == 0) {
+        System.out.println("No running instances found and no pending instances found.");
+        // if there are no instances, create one
+        createNewInstance();
+        System.out.println("Created new instance.");
+      }
       return;
     }
 
     // Calculate median CPU usage
-    double medianCpuUsage = calculateMedianCpuUsage(workingInstances); // this updates the instance classes cpu values with the new values
-    logger.info(String.format("Median CPU usage: %.2f%%", medianCpuUsage));
+    double averageCpuUsage = calculateAverageCpuUsage(workingInstances); // this updates the instance classes cpu values with the new values
+    logger.info(String.format("Median CPU usage: %.2f%%", averageCpuUsage));
 
-    // Scale up if median CPU is above high threshold
-    if (medianCpuUsage >= HIGH_CPU_THRESHOLD && instancePool.canScaleUp()) {
+    instancePool.printStatus();
+
+    // Scale up if average CPU is above high threshold
+    if (averageCpuUsage >= HIGH_CPU_THRESHOLD && instancePool.canScaleUp()) {
       logger.info(String.format(
           "Scaling up - Median CPU (%.2f%%) >= threshold (%.2f%%)",
-          medianCpuUsage, HIGH_CPU_THRESHOLD));
+          averageCpuUsage, HIGH_CPU_THRESHOLD));
       createNewInstance();
     }
-    // Scale down if median CPU is below low threshold
-    else if (medianCpuUsage <= LOW_CPU_THRESHOLD &&
+    // Scale down if average CPU is below low threshold
+    else if (averageCpuUsage <= LOW_CPU_THRESHOLD &&
         instancePool.canScaleDown()) {
       logger.info(String.format(
           "Scaling down - Median CPU (%.2f%%) <= threshold (%.2f%%)",
-          medianCpuUsage, LOW_CPU_THRESHOLD));
+          averageCpuUsage, LOW_CPU_THRESHOLD));
       terminateInstance();
     } else {
       logger.fine("No scaling action needed");
@@ -149,6 +158,26 @@ public class AutoScaler implements Runnable {
       return cpuValues.get(size / 2);
     }
   }
+
+
+  private double calculateAverageCpuUsage(List<Instance> runningInstances) {
+    // Get CPU utilization for all running instances
+    List<Double> cpuValues = runningInstances.stream()
+        .map(instance -> instancePool.getCpuUtilization(instance.getInstanceId()))
+        .sorted()
+        .collect(Collectors.toList());
+
+    if (cpuValues.isEmpty()) {
+      return 0.0;
+    }
+
+    // make the average of the cpu values
+    double sum = cpuValues.stream().mapToDouble(Double::doubleValue).sum();
+    return sum / cpuValues.size();
+  }
+
+
+
 
   private void createNewInstance() {
     Instance newInstance = instancePool.createNewInstance();

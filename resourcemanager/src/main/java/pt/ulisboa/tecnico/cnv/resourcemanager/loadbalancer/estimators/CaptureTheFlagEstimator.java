@@ -1,11 +1,13 @@
 package pt.ulisboa.tecnico.cnv.resourcemanager.loadbalancer.estimators;
 
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import com.amazonaws.services.dynamodbv2.model.AttributeValue;
+
 import pt.ulisboa.tecnico.cnv.mss.MSS;
 import pt.ulisboa.tecnico.cnv.resourcemanager.loadbalancer.parsers.RegressionCTFParser;
 import pt.ulisboa.tecnico.cnv.resourcemanager.loadbalancer.parsers.RegressionDataParser;
@@ -13,7 +15,7 @@ import pt.ulisboa.tecnico.cnv.resourcemanager.loadbalancer.parsers.RegressionDat
 public class CaptureTheFlagEstimator {
 
   private final AtomicInteger requestCount = new AtomicInteger(0);
-  private final int REQUEST_LIMIT = 3; // limit to 40 requests until the model is trained again
+  private final int REQUEST_LIMIT = 100; // limit to 40 requests until the model is trained again
   private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
   public MSS mss = new MSS();
   private final RegressionCTFParser parser = new RegressionCTFParser();
@@ -37,12 +39,10 @@ public class CaptureTheFlagEstimator {
       }
 
       // TODO print records
-
       lock.writeLock().lock();
       this.estimationFunction =
           new PolynomialRegression(records.get().getInputs(), records.get().getOutputs());
       lock.writeLock().unlock();
-
       requestCount.set(0);
     }
 

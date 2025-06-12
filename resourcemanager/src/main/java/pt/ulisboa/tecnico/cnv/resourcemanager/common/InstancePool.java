@@ -10,7 +10,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import pt.ulisboa.tecnico.cnv.resourcemanager.autoscaler.AutoScaler;
 import software.amazon.awssdk.services.cloudwatch.CloudWatchClient;
 import software.amazon.awssdk.services.cloudwatch.model.Datapoint;
 import software.amazon.awssdk.services.cloudwatch.model.Dimension;
@@ -86,6 +85,12 @@ public class InstancePool {
         .collect(Collectors.toList());
   }
 
+  public List<Instance> getPendingInstances() {
+    return instances.values().stream()
+            .filter(instance -> instance.getState() == Instance.InstanceState.PENDING)
+            .collect(Collectors.toList());
+  }
+
   public List<Instance> getOverloadedInstances() {
     return instances.values().stream()
             .filter(instance -> instance.getState() == Instance.InstanceState.OVERLOADED)
@@ -94,6 +99,10 @@ public class InstancePool {
 
   public int getOverloadedInstanceCount() {
     return getOverloadedInstances().size();
+  }
+
+  public int getPendingInstanceCount() {
+    return getPendingInstances().size();
   }
   
   public List<Instance> getInstancesMarkedForTermination() {
@@ -201,6 +210,7 @@ public class InstancePool {
               .build();
 
       GetMetricStatisticsResponse response = cloudWatchClient.getMetricStatistics(request);
+
 
       if (response.datapoints().isEmpty()) {
         // update the cpu usage in the instance object
